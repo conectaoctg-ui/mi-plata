@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mi Plata - Control de Finanzas Personales & Familiar COP</title>
+  <meta name="description" content="Control inteligente de gastos fijos, gastos diarios, cuentas por cobrar, deudas y presupuestos en Pesos Colombianos (COP) sincronizado en la nube para la familia.">
+  <meta name="theme-color" content="#10b981">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <!-- Canvas para fuegos artificiales y confeti -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- ================= PANTALLA 1: GATE DE AUTENTICACIÓN OBLIGATORIO ================= -->
+  <div id="authGateScreen" class="auth-gate-screen">
+    <div class="auth-gate-card">
+      <div class="auth-gate-badge">🔒 Acceso Privado y Seguro</div>
+      <div class="auth-logo-hero">💰</div>
+      <h1 class="auth-gate-title">Mi Plata</h1>
+      <p class="auth-gate-subtitle">Control de Finanzas Personales & Familiares en Pesos Colombianos (COP)</p>
+      
+      <div class="auth-features-list">
+        <div class="auth-feat-item">
+          <span class="auth-feat-icon">👨‍👩‍👧</span>
+          <div>
+            <strong>Espacio Familiar Compartido</strong>
+            <p>Tus cuentas sincronizadas en tiempo real con los miembros autorizados.</p>
+          </div>
+        </div>
+        <div class="auth-feat-item">
+          <span class="auth-feat-icon">🛡️</span>
+          <div>
+            <strong>Privacidad y Lista Blanca Estricta</strong>
+            <p>Nadie sin autorización puede ver ni alterar un solo peso de tu información.</p>
+          </div>
+        </div>
+        <div class="auth-feat-item">
+          <span class="auth-feat-icon">☁️</span>
+          <div>
+            <strong>Respaldo en Vivo en Firebase</strong>
+            <p>Tus datos siempre a salvo y disponibles en tu celular o computador.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado de Error / Acceso Denegado -->
+      <div id="authDeniedBox" class="auth-denied-box hidden">
+        <div class="auth-denied-icon">⛔</div>
+        <div class="auth-denied-text">
+          <strong>Acceso No Autorizado</strong>
+          <p id="authDeniedMsg">Tu correo no está en la lista de usuarios permitidos.</p>
+        </div>
+      </div>
+
+      <button id="btnGateLogin" class="btn-gate-google">
+        <svg class="google-icon" viewBox="0 0 24 24" width="22" height="22">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span>Continuar con Google</span>
+      </button>
+
+      <div class="auth-footer-note">
+        🔒 Conectado al proyecto seguro <code>mi-plata-38846</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PANTALLA 2: BLOQUEO POR PIN DE SEGURIDAD ================= -->
+  <div id="pinLockScreen" class="pin-lock-screen hidden">
+    <div class="pin-lock-card">
+      <div class="pin-lock-avatar" id="pinUserAvatar">💰</div>
+      <h2 class="pin-lock-title">Desbloquear Mi Plata</h2>
+      <p class="pin-lock-subtitle" id="pinSubtitle">Ingresa tu PIN de 4 dígitos</p>
+
+      <!-- Indicador de 4 dígitos -->
+      <div class="pin-dots-container" id="pinDotsContainer">
+        <div class="pin-dot" id="dot-0"></div>
+        <div class="pin-dot" id="dot-1"></div>
+        <div class="pin-dot" id="dot-2"></div>
+        <div class="pin-dot" id="dot-3"></div>
+      </div>
+
+      <div id="pinErrorText" class="pin-error-text">PIN incorrecto. Intenta de nuevo.</div>
+
+      <!-- Teclado Numérico Nativo -->
+      <div class="pin-keypad">
+        <button type="button" class="pin-key" onclick="window.ingresarDigitoPIN('1')">1</button>
+        <button type="button" class="pin-key" onclick="window.ingresarDigitoPIN('2')">2</button>
+        <button type="button" class="pin-key" onclick="window.ingresarDigitoPIN('3')">3</button>
+        <button type="button" class="pin-key" onclick="window.ingresarDigitoPIN('4')">4</button>
+        <button type="button" class="pin-key" onclick="window.ingresarDigitoPIN('5')">5</button>
+        <button type="button" class="pin-key" onclick="window.ingresarDigitoPIN('6')">6</button>
+        <button type="button" class="pin-key" onclick="window.ingresarDigitoPIN('7')">7</button>
+        <button type="button" class="pin-key" onclick="window.ingresarDigitoPIN('8')">8</button>
+        <button type="button" class="pin-key" onclick="window.ingresarDigitoPIN('9')">9</button>
+        <button type="button" class="pin-key pin-key-action" onclick="window.bloquearCerrarSesion()">Salir</button>
+        <button type="button" class="pin-key" onclick="window.ingresarDigitoPIN('0')">0</button>
+        <button type="button" class="pin-key pin-key-action" onclick="window.borrarDigitoPIN()">⌫</button>
+      </div>
+
+      <button type="button" class="btn-link" style="margin-top: 14px;" onclick="window.cambiarUsuarioPIN()">
+        Iniciar con otra cuenta de Google
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= APLICACIÓN PRINCIPAL (PROTEGIDA) ================= -->
+  <div id="app" class="app-layout hidden">
+    
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="brand">
+        <div class="logo-icon">💰</div>
+        <div>
+          <div class="brand-title-row">
+            <h1 class="logo-text">Mi Plata</h1>
+            <span class="currency-badge">COP ($)</span>
+          </div>
+          <div class="sync-badge" id="syncBadge">
+            <span class="sync-dot"></span>
+            <span id="syncStatusText">Modo local</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Header Center: Level Pill -->
+      <div class="header-level-pill" onclick="window.openModal('modalLogros')" title="Toca para ver tus logros y nivel">
+        <span class="level-icon" id="headerLevelIcon">🌱</span>
+        <div class="level-info-mini">
+          <span class="level-name-mini" id="headerLevelTitle">Nvl 1 • Semilla</span>
+          <div class="level-bar-mini">
+            <div class="level-bar-fill-mini" id="headerLevelBar" style="width: 20%"></div>
+          </div>
+        </div>
+        <span class="xp-badge-mini" id="headerXpText">0 XP</span>
+      </div>
+
+      <div class="auth-box" id="authBox">
+        <button id="btnLogin" class="btn-google hidden">
+          <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Entrar con Google</span>
+        </button>
+
+        <div id="userProfile" class="user-profile">
+          <img id="userAvatar" src="" alt="Avatar" class="avatar-img" />
+          <div class="user-info">
+            <span id="userName" class="user-name">Usuario</span>
+            <span class="user-cloud-tag">👨‍👩‍👧 Familia</span>
+          </div>
+          <button id="btnLockApp" class="btn-icon-nav" onclick="window.bloquearAppManual()" title="Bloquear con PIN">
+            🔒
+          </button>
+          <button id="btnLogout" class="btn-logout" title="Cerrar sesión">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Month Selector Bar -->
+    <div class="month-selector-bar">
+      <button id="btnPrevMonth" class="btn-icon-nav" title="Mes anterior">◀</button>
+      <div class="current-month-display">
+        <span id="displayMonthName">Septiembre 2026</span>
+        <span class="month-indicator-sub" id="displayMonthDays">Mes activo</span>
+      </div>
+      <button id="btnNextMonth" class="btn-icon-nav" title="Mes siguiente">▶</button>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="main-content">
+      
+      <!-- ================= SECTION: RESUMEN ================= -->
+      <section id="tab-resumen" class="tab-pane active">
+        
+        <!-- Gamification Banner Card -->
+        <div class="gamification-banner-card" onclick="window.openModal('modalLogros')">
+          <div class="gamification-banner-left">
+            <div class="gamification-avatar-badge" id="dashGamAvatar">🌱</div>
+            <div class="gamification-text-box">
+              <div class="gamification-tier" id="dashGamTier">Nivel 1 • Semilla del Ahorro</div>
+              <h3 class="gamification-phrase" id="dashGamPhrase">¡Cada pago a tiempo construye tu libertad!</h3>
+              <div class="gamification-xp-bar-box">
+                <div class="gamification-xp-bar-bg">
+                  <div class="gamification-xp-bar-fill" id="dashGamBar" style="width: 25%"></div>
+                </div>
+                <span class="gamification-xp-sub" id="dashGamSub">50 / 150 XP para Nivel 2</span>
+              </div>
+            </div>
+          </div>
+          <div class="gamification-banner-right">
+            <button class="btn-view-rewards">
+              <span>🏆</span>
+              <span>Ver Trofeos</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Masterclass Callout Banner (Interés Compuesto) -->
+        <div class="card masterclass-callout-card" onclick="window.openModal('modalInteresCompuesto')">
+          <div class="masterclass-callout-content">
+            <div class="callout-icon-box">📈</div>
+            <div>
+              <span class="badge badge-amber">🎓 Academia Financiera</span>
+              <h3 style="margin-top: 4px; font-size: 1.05rem;">La Magia del Interés Compuesto: Pon el dinero a trabajar para ti</h3>
+              <p class="text-muted" style="font-size: 0.8rem; margin-top: 2px;">Descubre cómo multiplicar $200.000 mensuales en millones y simula tu libertad financiera.</p>
+            </div>
+          </div>
+          <button class="btn-primary" style="align-self: center; white-space: nowrap;">
+            🚀 Abrir Simulador
+          </button>
+        </div>
+
+        <!-- Summary Cards Grid -->
+        <div class="summary-cards-grid">
+          <div class="card stat-card card-gradient-emerald">
+            <div class="stat-header">
+              <span class="stat-label">Total Gastos del Mes</span>
+              <span class="stat-icon">📊</span>
+            </div>
+            <div class="stat-value" id="summaryTotalMes">$ 0</div>
+            <div class="stat-sub" id="summaryTotalMesSub">Fijos pagados + Diarios</div>
+          </div>
+
+          <div class="card stat-card card-gradient-blue">
+            <div class="stat-header">
+              <span class="stat-label">Gastos Fijos del Mes</span>
+              <span class="stat-icon">📌</span>
+            </div>
+            <div class="stat-value" id="summaryFijosMes">$ 600.000</div>
+            <div class="stat-sub-progress">
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="summaryFijosBar" style="width: 0%"></div>
+              </div>
+              <span id="summaryFijosProgressText">0 de 1 pagados</span>
+            </div>
+          </div>
+
+          <!-- Por Cobrar (Me deben) -->
+          <div class="card stat-card card-subtle-emerald">
+            <div class="stat-header">
+              <span class="stat-label">🟢 Por Cobrar (Te Deben)</span>
+              <span class="stat-icon">📥</span>
+            </div>
+            <div class="stat-value text-emerald" id="summaryPorCobrar">$ 0</div>
+            <div class="stat-sub" id="summaryPorCobrarSub">Dinero a tu favor</div>
+          </div>
+
+          <!-- Por Pagar (Yo debo) -->
+          <div class="card stat-card card-subtle-rose">
+            <div class="stat-header">
+              <span class="stat-label">🔴 Por Pagar (Tú Debes)</span>
+              <span class="stat-icon">📤</span>
+            </div>
+            <div class="stat-value text-rose" id="summaryDeudas">$ 0</div>
+            <div class="stat-sub" id="summaryDeudasSub">Saldo pendiente por pagar</div>
+          </div>
+        </div>
+
+        <!-- Quick Actions Row -->
+        <div class="quick-actions-bar">
+          <button class="btn-action btn-action-primary" onclick="window.openModal('modalGasto')">
+            <span>➕</span> Registrar Gasto Diario
+          </button>
+          <button class="btn-action btn-action-emerald" onclick="window.abrirModalCobrar()">
+            <span>📥</span> Registrar Por Cobrar
+          </button>
+          <button class="btn-action btn-action-secondary" onclick="window.abrirModalPagar()">
+            <span>📤</span> Registrar Por Pagar
+          </button>
+          <button class="btn-action btn-action-secondary" onclick="window.openModal('modalFijo')">
+            <span>📌</span> Nuevo Gasto Fijo
+          </button>
+        </div>
+
+        <!-- Two Column Layout: Fijos pendientes & Ultimos movimientos -->
+        <div class="dashboard-grid">
+          
+          <!-- Column 1: Fijos pendientes de este mes -->
+          <div class="card">
+            <div class="card-head">
+              <h3>📌 Gastos Fijos de este Mes</h3>
+              <button class="btn-link" onclick="window.switchTab('fijos')">Ver todos</button>
+            </div>
+            <div id="resumenFijosList" class="items-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Column 2: Últimos gastos variables -->
+          <div class="card">
+            <div class="card-head">
+              <h3>💸 Últimos Gastos Diarios</h3>
+              <button class="btn-link" onclick="window.switchTab('gastos')">Ver todos</button>
+            </div>
+            <div id="resumenGastosList" class="items-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ================= SECTION: GASTOS FIJOS ================= -->
+      <section id="tab-fijos" class="tab-pane">
+        <div class="section-top-bar">
+          <div>
+            <h2 class="section-title">📌 Gastos Fijos Mensuales</h2>
+            <p class="section-subtitle">Gana <strong>+50 XP</strong> por cada gasto que pagues a tiempo.</p>
+          </div>
+          <button class="btn-primary" onclick="window.openModal('modalFijo')">
+            ➕ Agregar Gasto Fijo
+          </button>
+        </div>
+
+        <div class="fijos-summary-strip">
+          <div class="strip-item">
+            <span>Total Fijo Mensual:</span>
+            <strong id="fijosTotalPresupuesto">$ 600.000</strong>
+          </div>
+          <div class="strip-item">
+            <span>Pagado este mes:</span>
+            <strong class="text-emerald" id="fijosTotalPagado">$ 0</strong>
+          </div>
+          <div class="strip-item">
+            <span>Pendiente por pagar:</span>
+            <strong class="text-rose" id="fijosTotalPendiente">$ 600.000</strong>
+          </div>
+        </div>
+
+        <div id="fijosContainer" class="fijos-grid">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- ================= SECTION: GASTOS DIARIOS ================= -->
+      <section id="tab-gastos" class="tab-pane">
+        <div class="section-top-bar">
+          <div>
+            <h2 class="section-title">💸 Gastos Diarios y Variables</h2>
+            <p class="section-subtitle">Anota cualquier compra, comida, transporte o gasto del día en COP (+10 XP).</p>
+          </div>
+          <button class="btn-primary" onclick="window.openModal('modalGasto')">
+            ➕ Registrar Gasto
+          </button>
+        </div>
+
+        <!-- Filters & Search -->
+        <div class="filters-bar">
+          <div class="search-input-box">
+            <span>🔍</span>
+            <input type="text" id="searchGastos" placeholder="Buscar por concepto o comercio...">
+          </div>
+          <select id="filterCategoriaGasto" class="select-input">
+            <option value="todas">Todas las categorías</option>
+            <option value="Alimentación">🍔 Alimentación</option>
+            <option value="Transporte">🚕 Transporte</option>
+            <option value="Mercado">🛒 Mercado</option>
+            <option value="Servicios">💡 Servicios</option>
+            <option value="Salud">💊 Salud</option>
+            <option value="Entretenimiento">🍿 Entretenimiento</option>
+            <option value="Compras">🛍️ Compras</option>
+            <option value="Otros">📦 Otros</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div id="gastosListContainer" class="items-list">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SECTION: CUENTAS POR COBRAR Y POR PAGAR ================= -->
+      <section id="tab-deudas" class="tab-pane">
+        <div class="section-top-bar">
+          <div>
+            <h2 class="section-title">🤝 Cuentas Por Cobrar y Por Pagar</h2>
+            <p class="section-subtitle">¡Liquidar deudas te otorga <strong>+150 XP</strong> y la medalla "Paz y Salvo"!</p>
+          </div>
+          <div class="btn-group-top">
+            <button class="btn-emerald" onclick="window.abrirModalCobrar()">
+              📥 + Registrar Por Cobrar
+            </button>
+            <button class="btn-primary" onclick="window.abrirModalPagar()">
+              📤 + Registrar Por Pagar
+            </button>
+          </div>
+        </div>
+
+        <!-- Debt summary badges -->
+        <div class="debt-summary-grid">
+          <div class="card stat-card card-subtle-emerald">
+            <div class="stat-label">🟢 Dinero Que Te Deben (Por Cobrar)</div>
+            <div class="stat-value text-emerald" id="totalMeDeben">$ 0</div>
+            <div class="stat-sub" id="countMeDeben">0 personas te deben dinero</div>
+          </div>
+          <div class="card stat-card card-subtle-rose">
+            <div class="stat-label">🔴 Dinero Que Tú Debes (Por Pagar)</div>
+            <div class="stat-value text-rose" id="totalYoDebo">$ 0</div>
+            <div class="stat-sub" id="countYoDebo">0 cuentas pendientes por pagar</div>
+          </div>
+        </div>
+
+        <!-- Filter Sub-tabs -->
+        <div class="sub-tab-bar">
+          <button class="sub-tab-btn active" id="subtab-todos" onclick="window.filtrarTipoDeuda('todos')">
+            📋 Ver Todos
+          </button>
+          <button class="sub-tab-btn" id="subtab-cobrar" onclick="window.filtrarTipoDeuda('me_deben')">
+            🟢 Por Cobrar (Me deben)
+          </button>
+          <button class="sub-tab-btn" id="subtab-pagar" onclick="window.filtrarTipoDeuda('debo')">
+            🔴 Por Pagar (Yo debo)
+          </button>
+        </div>
+
+        <div id="deudasContainer" class="deudas-list-grid">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- ================= SECTION: REPORTES ================= -->
+      <section id="tab-reportes" class="tab-pane">
+        <div class="section-top-bar">
+          <div>
+            <h2 class="section-title">📈 Reportes y Categorías</h2>
+            <p class="section-subtitle">Distribución visual de tus gastos en Pesos Colombianos.</p>
+          </div>
+        </div>
+
+        <div class="reportes-grid">
+          <div class="card">
+            <h3>Distribución de Gastos por Categoría</h3>
+            <div id="reporteCategoriasList" class="category-breakdown-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+          
+          <div class="card">
+            <h3>Resumen Financiero del Mes</h3>
+            <div class="financial-summary-table" id="reporteResumenFinanciero">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SECTION: CONFIGURACIÓN, SEGURIDAD & FAMILIA ================= -->
+      <section id="tab-ajustes" class="tab-pane">
+        <div class="section-top-bar">
+          <div>
+            <h2 class="section-title">⚙️ Ajustes, Seguridad & Familia</h2>
+            <p class="section-subtitle">Administra tu PIN, miembros familiares autorizados y respaldo en Firebase.</p>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          
+          <!-- Security PIN Card -->
+          <div class="card">
+            <div class="card-head">
+              <h3>🔒 PIN de Seguridad (4 Dígitos)</h3>
+              <span class="badge badge-emerald" id="pinStatusBadge">PIN Activo</span>
+            </div>
+            <p class="text-muted" style="margin-bottom: 12px;">Protege la pantalla para que nadie pueda mirar tus cuentas si prestas tu celular.</p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn-primary" onclick="window.abrirModalCambiarPIN()">
+                🔑 Cambiar PIN de 4 Dígitos
+              </button>
+              <button class="btn-secondary" onclick="window.bloquearAppManual()">
+                🔒 Bloquear Ahora
+              </button>
+            </div>
+          </div>
+
+          <!-- Family Whitelist Access Card -->
+          <div class="card">
+            <div class="card-head">
+              <h3>👨‍👩‍👧 Lista Blanca de Correos Autorizados (Familia)</h3>
+            </div>
+            <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 12px;">
+              Solo los correos de Google listados aquí tienen permiso de acceder y sincronizar los datos de este hogar en la nube:
+            </p>
+            
+            <div id="whitelistEmailsContainer" class="items-list" style="margin-bottom: 14px;">
+              <!-- Rendered dynamically -->
+            </div>
+
+            <form onsubmit="window.handleAgregarCorreoFamilia(event)" style="display: flex; gap: 8px;">
+              <input type="email" id="inputNuevoCorreoFamilia" placeholder="correo-pareja-o-familia@gmail.com" required style="flex: 1; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+              <button type="submit" class="btn-emerald" style="white-space: nowrap;">
+                ➕ Agregar Correo
+              </button>
+            </form>
+          </div>
+
+          <!-- Cloud Status Card -->
+          <div class="card">
+            <div class="card-head">
+              <h3>☁️ Sincronización en la Nube (Firebase)</h3>
+            </div>
+            <div class="cloud-status-box" id="cloudStatusBox">
+              <div class="status-indicator">
+                <span class="status-icon" id="cloudStatusIcon">☁️</span>
+                <div>
+                  <h4 id="cloudStatusTitle">Espacio Compartido en Firebase</h4>
+                  <p id="cloudStatusDesc">Documento familiar: <code>hogares/familia_principal</code></p>
+                </div>
+              </div>
+              <div class="cloud-btn-row">
+                <button id="btnManualSync" class="btn-secondary">
+                  🔄 Forzar Sincronización Ahora
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Backup & Restore Card -->
+          <div class="card">
+            <div class="card-head">
+              <h3>💾 Copia de Seguridad Local (JSON)</h3>
+            </div>
+            <p class="text-muted">Descarga todos tus datos en un archivo seguro o restaura una copia anterior.</p>
+            <div class="backup-btn-row">
+              <button class="btn-primary" onclick="window.exportarDatosJSON()">
+                📥 Descargar Copia de Seguridad (.json)
+              </button>
+              <label class="btn-secondary file-upload-label">
+                📤 Restaurar desde JSON
+                <input type="file" id="fileImportJSON" accept=".json" style="display:none;" onchange="window.importarDatosJSON(event)">
+              </label>
+            </div>
+          </div>
+
+          <!-- Reset / Clear -->
+          <div class="card border-danger">
+            <div class="card-head">
+              <h3 class="text-rose">⚠️ Zona de Peligro</h3>
+            </div>
+            <p class="text-muted">Esto restablecerá los datos locales en este navegador.</p>
+            <button class="btn-danger" onclick="window.confirmarBorradoDatos()">
+              🗑️ Limpiar Datos Locales
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-tab="resumen" onclick="window.switchTab('resumen')">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Resumen</span>
+      </button>
+      <button class="nav-item" data-tab="fijos" onclick="window.switchTab('fijos')">
+        <span class="nav-icon">📌</span>
+        <span class="nav-label">Fijos</span>
+      </button>
+      <button class="nav-item" data-tab="gastos" onclick="window.switchTab('gastos')">
+        <span class="nav-icon">💸</span>
+        <span class="nav-label">Diarios</span>
+      </button>
+      <button class="nav-item" data-tab="deudas" onclick="window.switchTab('deudas')">
+        <span class="nav-icon">🤝</span>
+        <span class="nav-label">Por Cobrar/Pagar</span>
+      </button>
+      <button class="nav-item" data-tab="reportes" onclick="window.switchTab('reportes')">
+        <span class="nav-icon">📈</span>
+        <span class="nav-label">Reportes</span>
+      </button>
+      <button class="nav-item" data-tab="ajustes" onclick="window.switchTab('ajustes')">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Ajustes</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- Modal: Cambiar PIN de 4 Dígitos -->
+  <div id="modalCambiarPIN" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>🔒 Configurar PIN de Seguridad</h3>
+        <button class="modal-close" onclick="window.closeModal('modalCambiarPIN')">✕</button>
+      </div>
+      <form onsubmit="window.handleGuardarNuevoPIN(event)">
+        <div class="form-group">
+          <label for="inputNuevoPIN">Nuevo PIN de 4 dígitos numéricos *</label>
+          <input type="password" id="inputNuevoPIN" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="Ej: 1234" required style="font-size: 1.5rem; letter-spacing: 8px; text-align: center;">
+        </div>
+        <div class="form-group">
+          <label for="inputConfirmarPIN">Confirma tu PIN *</label>
+          <input type="password" id="inputConfirmarPIN" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="Ej: 1234" required style="font-size: 1.5rem; letter-spacing: 8px; text-align: center;">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="window.closeModal('modalCambiarPIN')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar PIN</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Registrar Gasto Diario -->
+  <div id="modalGasto" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>💸 Registrar Gasto Diario</h3>
+        <button class="modal-close" onclick="window.closeModal('modalGasto')">✕</button>
+      </div>
+      <form id="formGasto" onsubmit="window.handleGuardarGasto(event)">
+        <div class="form-group">
+          <label for="gastoConcepto">Concepto o descripción *</label>
+          <input type="text" id="gastoConcepto" placeholder="Ej: Almuerzo ejecutivo, Uber, Mercado D1..." required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="gastoMonto">Monto en Pesos COP *</label>
+            <div class="input-currency-wrapper">
+              <span class="currency-prefix">$</span>
+              <input type="text" id="gastoMonto" class="cop-input" inputmode="numeric" placeholder="500.000" required>
+            </div>
+            <div class="monto-helper" id="gastoMontoHelper">Ej: 500000 o 500.000</div>
+            <div class="quick-chip-row">
+              <button type="button" class="chip-btn" onclick="window.agregarMontoRapido('gastoMonto', 10000)">+10k</button>
+              <button type="button" class="chip-btn" onclick="window.agregarMontoRapido('gastoMonto', 20000)">+20k</button>
+              <button type="button" class="chip-btn" onclick="window.agregarMontoRapido('gastoMonto', 50000)">+50k</button>
+              <button type="button" class="chip-btn" onclick="window.agregarMontoRapido('gastoMonto', 100000)">+100k</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="gastoFecha">Fecha *</label>
+            <input type="date" id="gastoFecha" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="gastoCategoria">Categoría</label>
+            <select id="gastoCategoria">
+              <option value="Alimentación">🍔 Alimentación</option>
+              <option value="Transporte">🚕 Transporte</option>
+              <option value="Mercado">🛒 Mercado</option>
+              <option value="Servicios">💡 Servicios</option>
+              <option value="Salud">💊 Salud</option>
+              <option value="Entretenimiento">🍿 Entretenimiento</option>
+              <option value="Compras">🛍️ Compras</option>
+              <option value="Otros">📦 Otros</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="gastoMedioPago">Medio de Pago</label>
+            <select id="gastoMedioPago">
+              <option value="Efectivo">💵 Efectivo</option>
+              <option value="Nequi">📱 Nequi</option>
+              <option value="Daviplata">📱 Daviplata</option>
+              <option value="Tarjeta Débito">💳 Tarjeta Débito</option>
+              <option value="Tarjeta Crédito">💳 Tarjeta Crédito</option>
+              <option value="Transferencia Bancaria">🏦 Transferencia Bancaria</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="window.closeModal('modalGasto')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Gasto (+10 XP)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Agregar / Editar Gasto Fijo -->
+  <div id="modalFijo" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modalFijoTitle">📌 Nuevo Gasto Fijo Mensual</h3>
+        <button class="modal-close" onclick="window.closeModal('modalFijo')">✕</button>
+      </div>
+      <form id="formFijo" onsubmit="window.handleGuardarFijo(event)">
+        <input type="hidden" id="fijoId">
+        <div class="form-group">
+          <label for="fijoConcepto">Concepto del gasto recurrente *</label>
+          <input type="text" id="fijoConcepto" placeholder="Ej: Arriendo casa, Internet Fibra, Gimnasio..." required>
+        </div>
+        <div class="form-group">
+          <label for="fijoQuien">¿A quién se le paga? (Opcional)</label>
+          <input type="text" id="fijoQuien" placeholder="Ej: Señora Estela, Claro, EPM, Propietario...">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fijoMonto">Monto mensual en Pesos COP *</label>
+            <div class="input-currency-wrapper">
+              <span class="currency-prefix">$</span>
+              <input type="text" id="fijoMonto" class="cop-input" inputmode="numeric" placeholder="600.000" required>
+            </div>
+            <div class="monto-helper" id="fijoMontoHelper">Ej: 600000 o 600.000</div>
+            <div class="quick-chip-row">
+              <button type="button" class="chip-btn" onclick="window.agregarMontoRapido('fijoMonto', 100000)">+100k</button>
+              <button type="button" class="chip-btn" onclick="window.agregarMontoRapido('fijoMonto', 500000)">+500k</button>
+              <button type="button" class="chip-btn" onclick="window.setMontoExacto('fijoMonto', 600000)">600k</button>
+              <button type="button" class="chip-btn" onclick="window.setMontoExacto('fijoMonto', 1000000)">1M</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="fijoDia">Día límite de pago del mes (1 - 31) *</label>
+            <input type="number" id="fijoDia" min="1" max="31" placeholder="Ej: 10" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="fijoCategoria">Categoría</label>
+          <select id="fijoCategoria">
+            <option value="Arriendo">🏠 Arriendo / Vivienda</option>
+            <option value="Servicios">💡 Servicios Públicos (Luz, Agua, Gas, Internet)</option>
+            <option value="Suscripciones">📺 Suscripciones / Streaming</option>
+            <option value="Educación">🎓 Educación / Colegios / Universidad</option>
+            <option value="Salud">💊 Salud / EPS / Medicina</option>
+            <option value="Transporte">🚗 Transporte / Seguro / Gasolina</option>
+            <option value="Otros">📦 Otros Pagos Fijos</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="window.closeModal('modalFijo')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Gasto Fijo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Registrar Cuenta Por Cobrar o Por Pagar -->
+  <div id="modalDeuda" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modalDeudaTitle">🤝 Registrar Cuenta</h3>
+        <button class="modal-close" onclick="window.closeModal('modalDeuda')">✕</button>
+      </div>
+      <form id="formDeuda" onsubmit="window.handleGuardarDeuda(event)">
+        <input type="hidden" id="deudaId">
+        
+        <div class="form-group">
+          <label>¿Qué tipo de cuenta es? *</label>
+          <div class="radio-pill-group">
+            <label class="radio-pill radio-pill-emerald" id="labelRadioCobrar">
+              <input type="radio" name="deudaTipo" id="radioMeDeben" value="me_deben" onchange="window.actualizarLabelsModalDeuda()">
+              <span>🟢 Por Cobrar (Me deben a mí)</span>
+            </label>
+            <label class="radio-pill radio-pill-rose" id="labelRadioPagar">
+              <input type="radio" name="deudaTipo" id="radioDebo" value="debo" checked onchange="window.actualizarLabelsModalDeuda()">
+              <span>🔴 Por Pagar (Yo debo dinero)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="deudaPersona" id="labelDeudaPersona">Nombre de la persona o entidad *</label>
+          <input type="text" id="deudaPersona" placeholder="Ej: Carlos Gómez, Juan Pérez, Davivienda..." required>
+        </div>
+
+        <div class="form-group">
+          <label for="deudaConcepto" id="labelDeudaConcepto">Concepto o motivo *</label>
+          <input type="text" id="deudaConcepto" placeholder="Ej: Préstamo personal, Arreglo de moto, Almuerzo..." required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="deudaMonto" id="labelDeudaMonto">Monto Total en Pesos COP *</label>
+            <div class="input-currency-wrapper">
+              <span class="currency-prefix">$</span>
+              <input type="text" id="deudaMonto" class="cop-input" inputmode="numeric" placeholder="500.000" required>
+            </div>
+            <div class="monto-helper" id="deudaMontoHelper">Ej: 500000 o 500.000</div>
+          </div>
+          <div class="form-group">
+            <label for="deudaFechaLimite">Fecha de Pago Acordada (Opcional)</label>
+            <input type="date" id="deudaFechaLimite">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="window.closeModal('modalDeuda')">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btnGuardarDeudaText">Guardar Registro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Registrar Abono -->
+  <div id="modalAbono" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modalAbonoTitle">💵 Registrar Abono</h3>
+        <button class="modal-close" onclick="window.closeModal('modalAbono')">✕</button>
+      </div>
+      <form id="formAbono" onsubmit="window.handleGuardarAbono(event)">
+        <input type="hidden" id="abonoDeudaId">
+        <p class="modal-info-text" id="abonoDeudaInfo">Cuenta: <strong>-</strong></p>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="abonoMonto">Monto del Abono en Pesos COP *</label>
+            <div class="input-currency-wrapper">
+              <span class="currency-prefix">$</span>
+              <input type="text" id="abonoMonto" class="cop-input" inputmode="numeric" placeholder="50.000" required>
+            </div>
+            <div class="monto-helper" id="abonoMontoHelper">Ej: 50000 o 50.000</div>
+            <div class="quick-chip-row">
+              <button type="button" class="chip-btn" onclick="window.agregarMontoRapido('abonoMonto', 20000)">+20k</button>
+              <button type="button" class="chip-btn" onclick="window.agregarMontoRapido('abonoMonto', 50000)">+50k</button>
+              <button type="button" class="chip-btn" onclick="window.agregarMontoRapido('abonoMonto', 100000)">+100k</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="abonoFecha">Fecha del Abono *</label>
+            <input type="date" id="abonoFecha" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="abonoNota">Nota / Medio (Opcional)</label>
+          <input type="text" id="abonoNota" placeholder="Ej: Transferencia Nequi, Efectivo entregado">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="window.closeModal('modalAbono')">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btnGuardarAbonoText">Guardar Abono (+25 XP)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: LOGROS Y NIVELES ================= -->
+  <div id="modalLogros" class="modal-backdrop">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <h3>🏆 Tu Progreso y Recompensas</h3>
+        <button class="modal-close" onclick="window.closeModal('modalLogros')">✕</button>
+      </div>
+      
+      <!-- Current Status Card inside Modal -->
+      <div class="modal-trophy-hero">
+        <div class="trophy-avatar-big" id="modalTrophyIcon">🌱</div>
+        <div>
+          <span class="badge badge-emerald" id="modalLevelBadge">Nivel 1</span>
+          <h2 id="modalLevelTitle" style="margin-top: 4px;">Semilla del Ahorro</h2>
+          <p class="text-muted" id="modalLevelDesc">Estás dando los primeros pasos para dominar tus finanzas.</p>
+        </div>
+      </div>
+
+      <!-- XP Stats Bar -->
+      <div class="modal-xp-stats-card">
+        <div class="xp-stats-header">
+          <span>Experiencia Financiera (XP):</span>
+          <strong class="text-emerald" id="modalXpTotal">50 XP</strong>
+        </div>
+        <div class="progress-bar-bg" style="height: 10px;">
+          <div class="progress-bar-fill" id="modalXpBar" style="width: 25%; background: linear-gradient(90deg, #10b981, #059669);"></div>
+        </div>
+        <span class="xp-sub-detail" id="modalXpNextDetail">Te faltan 100 XP para el Nivel 2: Organizador de Bolsillos</span>
+      </div>
+
+      <!-- Masterclass shortcut card inside modal -->
+      <div class="card masterclass-mini-banner" onclick="window.closeModal('modalLogros'); window.openModal('modalInteresCompuesto');">
+        <div style="display:flex; align-items:center; gap: 12px;">
+          <span style="font-size: 2rem;">💡</span>
+          <div>
+            <strong>Lección Magistral: El Interés Compuesto</strong>
+            <p style="font-size: 0.75rem; color: var(--text-muted);">Aprende a poner el dinero a trabajar por ti y calcula tu proyección futura.</p>
+          </div>
+        </div>
+        <span class="badge badge-emerald">Abrir Lección ➜</span>
+      </div>
+
+      <!-- Levels Roadmap -->
+      <h4 style="margin: 18px 0 10px;">🗺️ Escalera de Niveles Financieros</h4>
+      <div class="levels-roadmap" id="levelsRoadmapList">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Medals / Badges Grid -->
+      <h4 style="margin: 20px 0 10px;">🎖️ Medallas y Trofeos Desbloqueados</h4>
+      <div class="medals-grid" id="medalsGridList">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- How to earn XP -->
+      <div class="how-to-xp-box">
+        <h4>⚡ ¿Cómo ganar más XP y subir de nivel?</h4>
+        <ul>
+          <li>📌 <strong>+50 XP:</strong> Por cada gasto fijo marcado como pagado.</li>
+          <li>🎯 <strong>+100 XP BONUS:</strong> Por pagar todos los gastos fijos del mes.</li>
+          <li>🤝 <strong>+150 XP BONUS:</strong> Por liquidar una deuda por completo (Paz y Salvo).</li>
+          <li>📥 <strong>+100 XP:</strong> Por cobrar y liquidar un préstamo a tu favor.</li>
+          <li>💵 <strong>+25 XP:</strong> Por cada abono registrado.</li>
+          <li>💸 <strong>+10 XP:</strong> Por registrar gastos diarios con disciplina.</li>
+        </ul>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-primary" onclick="window.closeModal('modalLogros')">¡Entendido, a seguir sumando!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: MASTERCLASS & SIMULADOR INTERÉS COMPUESTO ================= -->
+  <div id="modalInteresCompuesto" class="modal-backdrop">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap: 8px;">
+          <span style="font-size: 1.5rem;">💡</span>
+          <div>
+            <h3>La Magia del Interés Compuesto</h3>
+            <span class="badge badge-emerald">Aprende a Poner a Trabajar el Dinero</span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="window.closeModal('modalInteresCompuesto')">✕</button>
+      </div>
+
+      <!-- Hero explanation card -->
+      <div class="interes-hero-box">
+        <div class="quote-einstein">
+          <em>«El interés compuesto es la octava maravilla del mundo. Quien lo entiende, lo gana; quien no, lo paga.»</em>
+          <strong>— Albert Einstein</strong>
+        </div>
+        <p style="font-size: 0.86rem; color: #334155; margin-top: 10px;">
+          Cuando guardas dinero debajo del colchón, la inflación se lo come. Pero cuando inviertes con <strong>Interés Compuesto</strong>, los intereses que ganas generan nuevos intereses mes a mes, creando una <strong>bola de nieve de riqueza</strong> que trabaja por ti 24/7 sin que tengas que madrugar por ella.
+        </p>
+      </div>
+
+      <!-- Interactive Simulator Box -->
+      <div class="simulator-card">
+        <div class="simulator-header">
+          <h4>🧮 Simulador de Tu Futuro Financiero (COP)</h4>
+          <span class="badge badge-amber">Proyección en Tiempo Real</span>
+        </div>
+
+        <div class="sim-form-grid">
+          <div class="form-group">
+            <label>Inversión Inicial ($ COP):</label>
+            <input type="text" id="simMontoInicial" class="cop-input" value="1.000.000" oninput="window.calcularSimuladorInteres()">
+          </div>
+          <div class="form-group">
+            <label>Aporte Mensual Constante ($ COP):</label>
+            <input type="text" id="simAporteMensual" class="cop-input" value="200.000" oninput="window.calcularSimuladorInteres()">
+          </div>
+          <div class="form-group">
+            <label>Rentabilidad Anual Estimada (E.A.):</label>
+            <select id="simTasaAnual" onchange="window.calcularSimuladorInteres()">
+              <option value="0.10">10% E.A. (Cuentas de Alto Rendimiento / CDTs)</option>
+              <option value="0.12" selected>12% E.A. (Fondos de Inversión / CDTs)</option>
+              <option value="0.15">15% E.A. (Portafolio Diversificado / Acciones Globales)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tiempo de Inversión:</label>
+            <div class="sim-years-chips">
+              <button type="button" class="chip-year-btn" onclick="window.setSimYears(3)">3 años</button>
+              <button type="button" class="chip-year-btn" onclick="window.setSimYears(5)">5 años</button>
+              <button type="button" class="chip-year-btn active" onclick="window.setSimYears(10)">10 años</button>
+              <button type="button" class="chip-year-btn" onclick="window.setSimYears(15)">15 años</button>
+              <button type="button" class="chip-year-btn" onclick="window.setSimYears(20)">20 años</button>
+            </div>
+            <input type="hidden" id="simAnios" value="10">
+          </div>
+        </div>
+
+        <!-- Simulator Results Box -->
+        <div class="sim-results-grid">
+          <div class="sim-result-box sim-box-pocket">
+            <span>De tu Bolsillo (Aportado):</span>
+            <strong id="simTotalAportado">$ 25.000.000</strong>
+          </div>
+          <div class="sim-result-box sim-box-profits">
+            <span>Ganancia Pura (Interés Compuesto):</span>
+            <strong class="text-emerald" id="simTotalGanancias">+$ 21.000.000</strong>
+          </div>
+          <div class="sim-result-box sim-box-total">
+            <span>Monto Final Acumulado:</span>
+            <strong class="text-gold" id="simTotalFinal">$ 46.000.000</strong>
+          </div>
+        </div>
+
+        <!-- Visual Bar Breakdown -->
+        <div class="sim-bar-breakdown">
+          <div class="sim-bar-capital" id="simBarCapital" style="width: 50%" title="Tu Capital"></div>
+          <div class="sim-bar-interest" id="simBarInterest" style="width: 50%" title="Intereses Ganados"></div>
+        </div>
+        <div class="sim-bar-labels">
+          <span style="color: #475569;">🟦 Dinero Aportado</span>
+          <span style="color: #059669; font-weight: 800;">🟩 Intereses Trabajando Para Ti</span>
+        </div>
+      </div>
+
+      <!-- Practical Guide for Colombia -->
+      <div class="colombia-invest-guide">
+        <h4>🇨🇴 ¿Cómo empezar a poner a trabajar tu dinero en Colombia?</h4>
+        <div class="invest-steps-list">
+          <div class="step-card">
+            <span class="step-num">1</span>
+            <div>
+              <strong>Cuentas de Alto Rendimiento (10% - 13% E.A.)</strong>
+              <p>Opciones como Nu, Lulo Bank o Ualá te pagan intereses diarios sobre el dinero que tienes guardado con disponibilidad inmediata y seguro Fogafín.</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <span class="step-num">2</span>
+            <div>
+              <strong>CDTs Digitales a Plazo Fijo</strong>
+              <p>Pactas dejar un dinero a 6, 12 o 18 meses con tasa fija garantizada. Excelente para metas claras como comprar casa o moto.</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <span class="step-num">3</span>
+            <div>
+              <strong>Fondos de Inversión y ETFs (S&P 500)</strong>
+              <p>Plataformas reguladas te permiten invertir desde $50.000 en las 500 empresas más grandes del mundo para construir tu patrimonio a 5, 10 o 20 años.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-primary" onclick="window.closeModal('modalInteresCompuesto')">¡Entendido! A poner mi dinero a trabajar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: CELEBRACIÓN Y PREMIO ================= -->
+  <div id="modalCelebracion" class="modal-backdrop">
+    <div class="modal-dialog modal-celebracion-dialog">
+      <div class="celebration-animation-box">
+        <div class="celebration-trophy-icon" id="celebIcon">🎉</div>
+      </div>
+      <h2 id="celebTitle">¡FELICITACIONES!</h2>
+      <div class="badge badge-emerald" id="celebXpBadge" style="margin: 6px auto; display: inline-block;">+50 XP Ganados</div>
+      <p id="celebMessage" class="celebration-msg">¡Has cumplido con tu pago mensual! Tu disciplina financiera te acerca a la tranquilidad total.</p>
+      
+      <!-- Motivational Colombian Quote / Reward Card -->
+      <div class="reward-quote-card" id="celebQuoteCard">
+        <span class="quote-icon">💡</span>
+        <p id="celebQuoteText">"El orden en tu plata es la paz en tu mente. ¡Vas por excelente camino!"</p>
+      </div>
+
+      <button class="btn-primary btn-large-celebrate" onclick="window.closeModal('modalCelebracion')">
+        🚀 ¡Continuar con Energía!
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">Mensaje guardado</div>
+
+  <!-- Firebase CDN SDKs & App Script -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
