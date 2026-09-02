@@ -108,6 +108,12 @@ function saveDataLocal() {
 }
 
 // ================= GESTIÓN DEL PIN DE SEGURIDAD =================
+window.ingresarModoLocalPIN = function() {
+  document.getElementById('authGateScreen')?.classList.add('hidden');
+  document.getElementById('pinLockScreen')?.classList.remove('hidden');
+  document.getElementById('app')?.classList.add('hidden');
+};
+
 function getStoredPIN() {
   return localStorage.getItem(PIN_STORAGE_KEY) || "1234";
 }
