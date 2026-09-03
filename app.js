@@ -1733,7 +1733,13 @@ document.addEventListener("DOMContentLoaded", () => {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
       console.error("Error en login Google:", err);
-      alert("No se pudo iniciar sesión con Google: " + err.message);
+      if (err.code === 'auth/unauthorized-domain') {
+        alert("⚠️ Aviso de Google: Este dominio web aún no está autorizado en Firebase Console. Puedes ingresar de inmediato usando el botón '🔑 Ingresar con PIN de 4 Dígitos'.");
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        // El usuario cerró la ventana emergente, no hacemos nada
+      } else {
+        alert("Aviso al iniciar con Google: " + err.message + "\n\n💡 Puedes usar el botón '🔑 Ingresar con PIN de 4 Dígitos' para entrar directamente.");
+      }
     }
   };
 
