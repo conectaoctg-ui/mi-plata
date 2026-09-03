@@ -228,20 +228,42 @@
           </button>
         </div>
 
-        <!-- Summary Cards Grid -->
+          <!-- Summary Cards Grid -->
         <div class="summary-cards-grid">
+          <!-- Total Ingresos -->
           <div class="card stat-card card-gradient-emerald">
             <div class="stat-header">
-              <span class="stat-label">Total Gastos del Mes</span>
+              <span class="stat-label">🟢 Total Ingresos del Mes</span>
+              <span class="stat-icon">💵</span>
+            </div>
+            <div class="stat-value text-emerald" id="summaryTotalIngresos">$ 0</div>
+            <div class="stat-sub" id="summaryTotalIngresosSub">Sueldos, ventas y entradas</div>
+          </div>
+
+          <!-- Total Gastos -->
+          <div class="card stat-card card-subtle-rose">
+            <div class="stat-header">
+              <span class="stat-label">🔴 Total Gastos del Mes</span>
               <span class="stat-icon">📊</span>
             </div>
-            <div class="stat-value" id="summaryTotalMes">$ 0</div>
+            <div class="stat-value text-rose" id="summaryTotalMes">$ 0</div>
             <div class="stat-sub" id="summaryTotalMesSub">Fijos pagados + Diarios</div>
           </div>
 
+          <!-- Balance Neto Disponible -->
           <div class="card stat-card card-gradient-blue">
             <div class="stat-header">
-              <span class="stat-label">Gastos Fijos del Mes</span>
+              <span class="stat-label">⚖️ Balance Neto (Disponible)</span>
+              <span class="stat-icon">🏦</span>
+            </div>
+            <div class="stat-value" id="summaryBalanceNeto">$ 0</div>
+            <div class="stat-sub" id="summaryBalanceSub">Ingresos menos Gastos</div>
+          </div>
+
+          <!-- Gastos Fijos Presupuesto -->
+          <div class="card stat-card card-gradient-orange">
+            <div class="stat-header">
+              <span class="stat-label">📌 Gastos Fijos del Mes</span>
               <span class="stat-icon">📌</span>
             </div>
             <div class="stat-value" id="summaryFijosMes">$ 600.000</div>
@@ -276,10 +298,13 @@
 
         <!-- Quick Actions Row -->
         <div class="quick-actions-bar">
-          <button class="btn-action btn-action-primary" onclick="window.openModal('modalGasto')">
-            <span>➕</span> Registrar Gasto Diario
+          <button class="btn-action btn-action-emerald" onclick="window.openModal('modalIngreso')">
+            <span>➕</span> Registrar Ingreso
           </button>
-          <button class="btn-action btn-action-emerald" onclick="window.abrirModalCobrar()">
+          <button class="btn-action btn-action-primary" onclick="window.openModal('modalGasto')">
+            <span>💸</span> Registrar Gasto Diario
+          </button>
+          <button class="btn-action btn-action-secondary" onclick="window.abrirModalCobrar()">
             <span>📥</span> Registrar Por Cobrar
           </button>
           <button class="btn-action btn-action-secondary" onclick="window.abrirModalPagar()">
@@ -290,13 +315,24 @@
           </button>
         </div>
 
-        <!-- Two Column Layout: Fijos pendientes & Ultimos movimientos -->
+        <!-- Three Column Layout: Fijos, Gastos y Entradas -->
         <div class="dashboard-grid">
           
-          <!-- Column 1: Fijos pendientes de este mes -->
+          <!-- Column 1: Entradas / Ingresos de este mes -->
           <div class="card">
             <div class="card-head">
-              <h3>📌 Gastos Fijos de este Mes</h3>
+              <h3>🟢 Ingresos y Entradas</h3>
+              <button class="btn-link text-emerald" onclick="window.openModal('modalIngreso')">➕ Agregar</button>
+            </div>
+            <div id="resumenIngresosList" class="items-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Column 2: Fijos pendientes de este mes -->
+          <div class="card">
+            <div class="card-head">
+              <h3>📌 Gastos Fijos del Mes</h3>
               <button class="btn-link" onclick="window.switchTab('fijos')">Ver todos</button>
             </div>
             <div id="resumenFijosList" class="items-list">
@@ -304,7 +340,7 @@
             </div>
           </div>
 
-          <!-- Column 2: Últimos gastos variables -->
+          <!-- Column 3: Últimos gastos variables -->
           <div class="card">
             <div class="card-head">
               <h3>💸 Últimos Gastos Diarios</h3>
@@ -598,6 +634,72 @@
   </div>
 
   <!-- ================= MODALS ================= -->
+
+  <!-- Modal: Registrar Ingreso / Entrada de Dinero -->
+  <div id="modalIngreso" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>🟢 Registrar Ingreso de Dinero</h3>
+        <button class="modal-close" onclick="window.closeModal('modalIngreso')">✕</button>
+      </div>
+      <form id="formIngreso" onsubmit="window.handleGuardarIngreso(event)">
+        <div class="form-group">
+          <label for="ingresoConcepto">Concepto o Fuente del Ingreso *</label>
+          <input type="text" id="ingresoConcepto" placeholder="Ej: Sueldo quincena, Venta producto, Honorarios..." required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ingresoMonto">Monto en Pesos COP *</label>
+            <div class="input-currency-wrapper">
+              <span class="currency-prefix">$</span>
+              <input type="text" id="ingresoMonto" class="cop-input" inputmode="numeric" placeholder="1.500.000" required>
+            </div>
+            <div class="monto-helper" id="ingresoMontoHelper">Ej: 1500000 o 1.500.000</div>
+            <div class="quick-chip-row">
+              <button type="button" class="chip-btn" onclick="window.agregarMontoRapido('ingresoMonto', 200000)">+200k</button>
+              <button type="button" class="chip-btn" onclick="window.agregarMontoRapido('ingresoMonto', 500000)">+500k</button>
+              <button type="button" class="chip-btn" onclick="window.agregarMontoRapido('ingresoMonto', 1000000)">+1M</button>
+              <button type="button" class="chip-btn" onclick="window.setMontoExacto('ingresoMonto', 1500000)">1.5M</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="ingresoFecha">Fecha del Ingreso *</label>
+            <input type="date" id="ingresoFecha" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ingresoCategoria">Categoría de Ingreso</label>
+            <select id="ingresoCategoria">
+              <option value="Sueldo">💼 Sueldo / Salario / Quincena</option>
+              <option value="Ventas">🏪 Ventas / Comercio / Negocio</option>
+              <option value="Honorarios">📈 Honorarios / Servicios Freelance</option>
+              <option value="Arriendo Recibido">🏠 Renta / Arriendo a Favor</option>
+              <option value="Rendimientos">📈 Rendimientos / Intereses</option>
+              <option value="Extras">🎁 Extras / Regalo / Bonificación</option>
+              <option value="Otros">📦 Otros Ingresos</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="ingresoMedio">Cuenta Receptora / Medio</label>
+            <select id="ingresoMedio">
+              <option value="Nequi">📱 Nequi</option>
+              <option value="Bancolombia">🏦 Bancolombia / Cuenta de Ahorros</option>
+              <option value="Daviplata">📱 Daviplata</option>
+              <option value="Efectivo">💵 Efectivo</option>
+              <option value="Nu Bank">🟣 Nu Bank (Cajita)</option>
+              <option value="Lulo Bank">🟢 Lulo Bank</option>
+              <option value="Otro Banco">🏦 Otro Banco</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="window.closeModal('modalIngreso')">Cancelar</button>
+          <button type="submit" class="btn-emerald">Guardar Ingreso (+20 XP)</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- Modal: Cambiar PIN de 4 Dígitos -->
   <div id="modalCambiarPIN" class="modal-backdrop">

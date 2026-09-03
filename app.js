@@ -44,6 +44,7 @@ const STORAGE_KEY = "mi_plata_db_v1";
 const PIN_STORAGE_KEY = "mi_plata_pin_v1";
 
 const DATOS_INICIALES = {
+  ingresos: [],
   deudas: [],
   abonos: [],
   fijos: [
@@ -84,6 +85,7 @@ function loadInitialData() {
     if (local) {
       const parsed = JSON.parse(local);
       return {
+        ingresos: parsed.ingresos || [],
         deudas: parsed.deudas || [],
         abonos: parsed.abonos || [],
         fijos: parsed.fijos || DATOS_INICIALES.fijos,
@@ -892,8 +894,10 @@ window.openModal = function(modalId, params = {}) {
   modal.classList.add('open');
 
   const todayStr = new Date().toISOString().split('T')[0];
+  const ingresoFecha = document.getElementById('ingresoFecha');
   const gastoFecha = document.getElementById('gastoFecha');
   const abonoFecha = document.getElementById('abonoFecha');
+  if (ingresoFecha) ingresoFecha.value = todayStr;
   if (gastoFecha) gastoFecha.value = todayStr;
   if (abonoFecha) abonoFecha.value = todayStr;
 
@@ -922,7 +926,7 @@ window.openModal = function(modalId, params = {}) {
     window.calcularSimuladorInteres();
   }
 
-  ['gastoMonto', 'fijoMonto', 'deudaMonto', 'abonoMonto'].forEach(id => {
+  ['ingresoMonto', 'gastoMonto', 'fijoMonto', 'deudaMonto', 'abonoMonto'].forEach(id => {
     actualizarHelperInput(id);
   });
 };
@@ -975,16 +979,23 @@ function renderMonthHeader() {
 function renderResumen() {
   const mesKey = getMesKey();
 
+  // 1. Ingresos del Mes
+  const ingresosMes = (state.data.ingresos || []).filter(i => (i.fecha || "").startsWith(mesKey));
+  const totalIngresos = ingresosMes.reduce((acc, i) => acc + Number(i.monto || 0), 0);
+
+  // 2. Gastos Fijos
   const fijosActivos = state.data.fijos.filter(f => f.activo !== false);
   const totalFijosPresupuesto = fijosActivos.reduce((acc, f) => acc + Number(f.monto || 0), 0);
 
   const pagosMes = state.data.pagosFijos.filter(p => p.mes === mesKey);
   const totalFijosPagados = pagosMes.reduce((acc, p) => acc + Number(p.monto || 0), 0);
 
-  const gastosMes = state.data.gastos.filter(g => (g.fecha || '').startsWith(mesKey));
+  // 3. Gastos Diarios
+  const gastosMes = state.data.gastos.filter(g => (g.fecha || "").startsWith(mesKey));
   const totalGastosDiarios = gastosMes.reduce((acc, g) => acc + Number(g.monto || 0), 0);
 
   const totalMes = totalFijosPagados + totalGastosDiarios;
+  const balanceNeto = totalIngresos - totalMes;
 
   let totalDeudasYoDebo = 0;
   let totalPorCobrar = 0;
@@ -992,31 +1003,84 @@ function renderResumen() {
   state.data.deudas.forEach(d => {
     const abonos = state.data.abonos.filter(a => a.deudaId === d.id).reduce((sum, a) => sum + Number(a.monto || 0), 0);
     const restante = Math.max(0, Number(d.montoTotal || 0) - abonos);
-    if (d.tipo === 'debo') {
+    if (d.tipo === "debo") {
       totalDeudasYoDebo += restante;
     } else {
       totalPorCobrar += restante;
     }
   });
 
-  document.getElementById('summaryTotalMes').innerText = formatCOP(totalMes);
-  document.getElementById('summaryFijosMes').innerText = formatCOP(totalFijosPresupuesto);
-  document.getElementById('summaryPorCobrar').innerText = formatCOP(totalPorCobrar);
-  document.getElementById('summaryDeudas').innerText = formatCOP(totalDeudasYoDebo);
+  const elTotalIngresos = document.getElementById("summaryTotalIngresos");
+  const elTotalMes = document.getElementById("summaryTotalMes");
+  const elBalanceNeto = document.getElementById("summaryBalanceNeto");
+  const elBalanceSub = document.getElementById("summaryBalanceSub");
+
+  if (elTotalIngresos) elTotalIngresos.innerText = formatCOP(totalIngresos);
+  if (elTotalMes) elTotalMes.innerText = formatCOP(totalMes);
+
+  if (elBalanceNeto) {
+    elBalanceNeto.innerText = formatCOP(balanceNeto);
+    elBalanceNeto.className = `stat-value ${balanceNeto >= 0 ? "text-emerald" : "text-rose"}`;
+  }
+
+  if (elBalanceSub) {
+    if (totalIngresos > 0) {
+      const pctAhorro = Math.round((balanceNeto / totalIngresos) * 100);
+      elBalanceSub.innerText = balanceNeto >= 0 
+        ? `🟢 Superávit: Te queda el ${pctAhorro}% libre (${formatCOP(balanceNeto)})`
+        : `🔴 Déficit: Gastaste ${formatCOP(Math.abs(balanceNeto))} más de lo que ingresó`;
+    } else {
+      elBalanceSub.innerText = "Registra tus ingresos para calcular tu saldo libre";
+    }
+  }
+
+  const elFijos = document.getElementById("summaryFijosMes");
+  const elCobrar = document.getElementById("summaryPorCobrar");
+  const elDeudas = document.getElementById("summaryDeudas");
+
+  if (elFijos) elFijos.innerText = formatCOP(totalFijosPresupuesto);
+  if (elCobrar) elCobrar.innerText = formatCOP(totalPorCobrar);
+  if (elDeudas) elDeudas.innerText = formatCOP(totalDeudasYoDebo);
 
   const fijosPagadosCount = pagosMes.length;
   const fijosTotalCount = fijosActivos.length;
   const pctFijos = fijosTotalCount > 0 ? (fijosPagadosCount / fijosTotalCount) * 100 : 0;
   
-  document.getElementById('summaryFijosBar').style.width = `${pctFijos}%`;
-  document.getElementById('summaryFijosProgressText').innerText = `${fijosPagadosCount} de ${fijosTotalCount} pagados (${formatCOP(totalFijosPagados)})`;
+  const elBar = document.getElementById("summaryFijosBar");
+  const elProg = document.getElementById("summaryFijosProgressText");
+  if (elBar) elBar.style.width = `${pctFijos}%`;
+  if (elProg) elProg.innerText = `${fijosPagadosCount} de ${fijosTotalCount} pagados (${formatCOP(totalFijosPagados)})`;
 
-  renderResumenLists(fijosActivos, pagosMes, gastosMes);
+  renderResumenLists(fijosActivos, pagosMes, gastosMes, ingresosMes);
 }
 
-function renderResumenLists(fijosActivos, pagosMes, gastosMes) {
-  const fijosListEl = document.getElementById('resumenFijosList');
-  const gastosListEl = document.getElementById('resumenGastosList');
+function renderResumenLists(fijosActivos, pagosMes, gastosMes, ingresosMes = []) {
+  const fijosListEl = document.getElementById("resumenFijosList");
+  const gastosListEl = document.getElementById("resumenGastosList");
+  const ingresosListEl = document.getElementById("resumenIngresosList");
+
+  if (ingresosListEl) {
+    if (ingresosMes.length === 0) {
+      ingresosListEl.innerHTML = `<div class="empty-state"><div class="empty-icon">💵</div>Sin ingresos registrados en este mes.</div>`;
+    } else {
+      const ultimos = [...ingresosMes].reverse().slice(0, 4);
+      ingresosListEl.innerHTML = ultimos.map(i => `
+        <div class="item-row">
+          <div class="item-left">
+            <div class="item-icon">💵</div>
+            <div class="item-details">
+              <h4>${i.concepto}</h4>
+              <p>${i.fecha} • ${i.categoria || "Ingreso"} ${i.medio ? `(${i.medio})` : ""}</p>
+            </div>
+          </div>
+          <div class="item-right">
+            <span class="item-amount text-emerald">+ ${formatCOP(i.monto)}</span>
+            <button class="btn-icon-danger" onclick="window.eliminarIngreso('${i.id}')" title="Eliminar">🗑️</button>
+          </div>
+        </div>
+      `).join("");
+    }
+  }
 
   if (fijosListEl) {
     if (fijosActivos.length === 0) {
@@ -1030,20 +1094,20 @@ function renderResumenLists(fijosActivos, pagosMes, gastosMes) {
               <div class="item-icon">${getIconoCategoria(f.categoria)}</div>
               <div class="item-details">
                 <h4>${f.concepto}</h4>
-                <p>Día límite: ${f.dia} ${f.quien ? `• ${f.quien}` : ''}</p>
+                <p>Día límite: ${f.dia} ${f.quien ? `• ${f.quien}` : ""}</p>
               </div>
             </div>
             <div class="item-right">
               <div>
                 <div class="item-amount">${formatCOP(f.monto)}</div>
-                <span class="badge ${estaPagado ? 'badge-emerald' : 'badge-rose'}">
-                  ${estaPagado ? '✓ Pagado' : '⏳ Pendiente'}
+                <span class="badge ${estaPagado ? "badge-emerald" : "badge-rose"}">
+                  ${estaPagado ? "✓ Pagado" : "⏳ Pendiente"}
                 </span>
               </div>
             </div>
           </div>
         `;
-      }).join('');
+      }).join("");
     }
   }
 
@@ -1058,14 +1122,15 @@ function renderResumenLists(fijosActivos, pagosMes, gastosMes) {
             <div class="item-icon">${getIconoCategoria(g.categoria)}</div>
             <div class="item-details">
               <h4>${g.concepto}</h4>
-              <p>${g.fecha} • ${g.categoria || 'Gasto'}</p>
+              <p>${g.fecha} • ${g.categoria || "Gasto"}</p>
             </div>
           </div>
           <div class="item-right">
             <span class="item-amount text-rose">- ${formatCOP(g.monto)}</span>
+            <button class="btn-icon-danger" onclick="window.eliminarGasto('${g.id}')" title="Eliminar">🗑️</button>
           </div>
         </div>
-      `).join('');
+      `).join("");
     }
   }
 }
@@ -1362,6 +1427,59 @@ function renderReportes() {
 }
 
 // ================= ACCIONES & CRUD =================
+
+// Ingresos / Entradas de Dinero
+window.handleGuardarIngreso = function(e) {
+  e.preventDefault();
+  const concepto = document.getElementById('ingresoConcepto').value.trim();
+  const montoInput = document.getElementById('ingresoMonto').value;
+  const monto = parseMontoCOP(montoInput);
+  const fecha = document.getElementById('ingresoFecha').value;
+  const categoria = document.getElementById('ingresoCategoria').value;
+  const medio = document.getElementById('ingresoMedio').value;
+
+  if (!concepto || !monto || monto <= 0 || !fecha) {
+    alert("Por favor ingresa un concepto y un monto válido en Pesos COP.");
+    return;
+  }
+
+  if (!state.data.ingresos) state.data.ingresos = [];
+
+  const nuevoIngreso = {
+    id: `in-${Date.now()}`,
+    concepto,
+    monto,
+    fecha,
+    categoria,
+    medio,
+    creadoPor: state.currentUser?.email || 'Admin'
+  };
+
+  state.data.ingresos.push(nuevoIngreso);
+  saveDataLocal();
+  sincronizarConNube();
+  renderAll();
+  window.closeModal('modalIngreso');
+  document.getElementById('formIngreso').reset();
+  actualizarHelperInput('ingresoMonto');
+
+  window.mostrarCelebracion(
+    '💵',
+    '¡INGRESO REGISTRADO!',
+    20,
+    `Entraron ${formatCOP(monto)} por "${concepto}". ¡Excelente flujo para tu hogar!`,
+    "El dinero bien recibido y bien administrado siempre rinde el doble."
+  );
+};
+
+window.eliminarIngreso = function(id) {
+  if (!confirm("¿Deseas eliminar este registro de ingreso?")) return;
+  state.data.ingresos = (state.data.ingresos || []).filter(i => i.id !== id);
+  saveDataLocal();
+  sincronizarConNube();
+  renderAll();
+  showToast("🗑️ Ingreso eliminado");
+};
 
 // Gastos Diarios
 window.handleGuardarGasto = function(e) {
@@ -1664,7 +1782,7 @@ window.confirmarBorradoDatos = function() {
 
 // ================= CONFIGURACIÓN DE INPUTS FORMATEADOS EN VIVO =================
 function configurarInputsFormateados() {
-  const inputIds = ['gastoMonto', 'fijoMonto', 'deudaMonto', 'abonoMonto', 'simMontoInicial', 'simAporteMensual'];
+  const inputIds = ['ingresoMonto', 'gastoMonto', 'fijoMonto', 'deudaMonto', 'abonoMonto', 'simMontoInicial', 'simAporteMensual'];
 
   inputIds.forEach(id => {
     const input = document.getElementById(id);
