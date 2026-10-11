@@ -1,0 +1,19 @@
+{
+  "name": "Bienvenida conectaoctg",
+  "short_name": "conectaoctg",
+  "description": "Guía de ingreso para nuevos empleados: venta y servicio técnico iPhone.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f5f7",
+  "theme_color": "#0f172a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231d1d1f'/><text y='.9em' font-size='70' x='15'>📱</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

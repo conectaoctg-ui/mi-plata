@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bienvenida conectaoctg</title>
+  <meta name="description" content="Guía de ingreso para nuevos empleados de conectaoctg: venta y servicio técnico exclusivo para iPhone.">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <!-- ============ BIENVENIDA / PERFIL ============ -->
+  <div id="welcome" class="welcome hidden">
+    <div class="welcome-card">
+      <div class="logo"></div>
+      <h1>Bienvenido a <span id="wEmpresa"></span></h1>
+      <p class="muted" id="wLema"></p>
+      <form id="profileForm">
+        <label>Tu nombre
+          <input id="pfNombre" required maxlength="40" placeholder="Ej.: Laura">
+        </label>
+        <label>Tu cargo
+          <select id="pfRol">
+            <option value="Ventas">Asesor(a) de ventas</option>
+            <option value="Servicio técnico">Técnico(a)</option>
+            <option value="Todos">Ventas y técnico</option>
+          </select>
+        </label>
+        <button class="btn primary" type="submit">Empezar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ APP ============ -->
+  <header class="topbar">
+    <div class="brand"><span class="logo sm"></span><span id="hEmpresa"></span></div>
+    <button id="btnPerfil" class="chip" title="Cambiar perfil"></button>
+  </header>
+
+  <main id="view" class="view"></main>
+
+  <nav class="tabbar">
+    <button data-tab="inicio" class="active"><span>🏠</span>Inicio</button>
+    <button data-tab="ruta"><span>✅</span>Ruta</button>
+    <button data-tab="cursos"><span>📚</span>Cursos</button>
+    <button data-tab="taller"><span>🔧</span>Taller</button>
+    <button data-tab="ayuda"><span>🔎</span>Ayuda</button>
+  </nav>
+
+  <script src="content.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
