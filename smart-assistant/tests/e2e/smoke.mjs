@@ -35,6 +35,7 @@ page.on('dialog', (d) => d.accept('Nueva.Clave1'));
 const shot = async (n) => { if (SHOTS) await page.screenshot({ path: join(SHOTS, n + '.png'), fullPage: true }); };
 const ir = async (h) => { await page.evaluate((x) => { location.hash = x; }, h); await page.waitForTimeout(150); };
 const texto = () => page.locator('#view').innerText();
+const textoCompleto = () => page.locator('#view').textContent(); // incluye secciones plegadas
 const confirmarDialogo = async () => { await page.locator('#dialogOk').click(); await page.waitForTimeout(100); };
 const login = async (u, c) => {
   await page.fill('input[name=usuario]', u);
@@ -102,6 +103,7 @@ ok(!(await texto()).includes('Margen sobre venta'), 'asesor no ve cálculo de m�
 await ir('#/ventas/catalogo');
 ok(!(await texto()).includes('1.400.000'), 'asesor no ve el costo');
 ok((await texto()).includes('DEMO'), 'avisa de datos demo');
+ok((await textoCompleto()).includes('6 meses por defectos de fábrica'), 'argumento de venta usa la garantía de la política (usado = 6 meses)');
 await ir('#/ventas/recomendar');
 await page.fill('input[name=presupuesto]', '2.000.000'); await page.check('input[value=fotos]');
 await page.click('#fRec button');
@@ -174,6 +176,28 @@ await page.click('[data-estado=listo]'); await page.waitForTimeout(150);
 await page.click('[data-estado=entregado]'); await confirmarDialogo(); await page.waitForTimeout(150);
 ok((await texto()).includes('Entregado'), 'flujo técnico completo hasta entrega');
 await shot('07-caso');
+
+console.log('3b. Garantía');
+const hace2Meses = new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10);
+await ir('#/tecnico/garantias');
+ok((await textoCompleto()).includes('6 meses de garantía'), 'muestra la política vigente');
+await page.fill('#fG input[name=modelo]', 'iPhone 13'); await page.selectOption('#fG select[name=condicion]', 'usado');
+await page.fill('#fG input[name=fechaCompra]', hace2Meses); await page.fill('#fG textarea[name=sintomas]', 'No carga con ningún cable');
+await page.click('#evaluar');
+ok((await texto()).includes('Dentro del término'), 'evalúa garantía vigente');
+await page.click('#fG button.primary'); await page.waitForTimeout(200);
+ok((await texto()).includes('responder antes del'), 'crea caso de garantía con plazo de respuesta');
+await page.selectOption('#fH select[name=tipo]', 'confirmada'); await page.fill('#fH input[name=texto]', 'Placa de carga defectuosa');
+await page.fill('#fH input[name=evidencia]', 'Medición con amperímetro'); await page.click('#fH button'); await page.waitForTimeout(150);
+await page.selectOption('#fR select[name=reparable]', 'no'); await page.selectOption('#fR select[name=tipo]', 'cambio');
+await page.fill('#fR input[name=valorPagado]', '1.800.000'); await page.fill('#fR input[name=valorEquipoNuevo]', '1.500.000');
+await page.click('#fR button');
+ok((await page.locator('#errR').innerText()).includes('Según la política'), 'rechaza cambio por equipo de menor valor (antes de confirmar)');
+await page.fill('#fR input[name=valorEquipoNuevo]', '2.000.000');
+await page.click('#fR button'); await confirmarDialogo(); await page.waitForTimeout(200);
+ok((await texto()).includes('excedente a pagar: $ 200.000 COP'), 'calcula excedente del cambio');
+ok((await texto()).includes('respondida a tiempo'), 'marca garantía respondida a tiempo');
+await shot('09-garantia');
 
 const ancho = await page.evaluate(() => document.documentElement.scrollWidth);
 if (ancho > 390) console.log('    desbordan:', await page.evaluate(() => [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > 391 && !e.closest('.table-wrap') && !e.closest('#nav')).slice(0, 5).map((e) => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().right)).join(', ')));

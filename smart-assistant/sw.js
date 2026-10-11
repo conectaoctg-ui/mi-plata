@@ -1,9 +1,9 @@
 // Service worker: red primero y caché como respaldo para uso sin conexión.
-const CACHE = 'conectaoctg-sa-v1';
+const CACHE = 'conectaoctg-sa-v2';
 const ARCHIVOS = [
   './', './index.html', './styles.css', './manifest.json', './js/app.js',
   './js/core/money.js', './js/core/finance.js', './js/core/permissions.js', './js/core/crm.js', './js/core/service.js',
-  './js/core/search.js', './js/core/academy.js', './js/core/roleplay.js', './js/core/catalog.js', './js/core/auth.js', './js/core/audit.js',
+  './js/core/search.js', './js/core/academy.js', './js/core/roleplay.js', './js/core/catalog.js', './js/core/auth.js', './js/core/audit.js', './js/core/garantia.js',
   './js/data/store.js', './js/data/repo.js', './js/data/seed.js',
   './js/ui/h.js', './js/ui/inicio.js', './js/ui/ventas.js', './js/ui/clientes.js', './js/ui/financiacion.js', './js/ui/tecnico.js',
   './js/ui/academia.js', './js/ui/buscar.js', './js/ui/admin.js'

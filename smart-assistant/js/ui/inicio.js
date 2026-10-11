@@ -9,6 +9,7 @@ export function render({ repo, user, view }) {
   const res = resumenProgreso(lecs, prog);
   const asignaciones = repo.asignacionesDe(user).filter((a) => a.estado !== 'completada');
   const bloques = [];
+  const avisosGarantia = [];
 
   bloques.push(`
     <div class="card link" data-href="#/academia">
@@ -29,6 +30,9 @@ export function render({ repo, user, view }) {
       </div>`);
   }
   if (can(user, 'tecnico.verCasos')) {
+    const hoy = repo.hoyISO();
+    const urgentes = repo.listarCasos(user).filter((c) => c.tipo === 'garantia' && !c.garantia.resolucion && c.garantia.limiteRespuesta && c.garantia.limiteRespuesta <= hoy);
+    if (urgentes.length) avisosGarantia.push(`${urgentes.length} garantía(s) con plazo de respuesta vencido o que vence hoy.`);
     const casos = repo.listarCasos(user).filter((c) => !['entregado', 'cancelado'].includes(c.estado));
     bloques.push(`
       <div class="card link" data-href="#/tecnico/casos">
@@ -55,6 +59,7 @@ export function render({ repo, user, view }) {
     <h1>Hola, ${esc(user.nombre)}</h1>
     <p class="muted">${esc(ROLES[user.rol])} · ${esc(repo.config().empresa)}</p>
     ${alertas.length ? `<div class="notice warn"><strong>Pendientes de la administración</strong><ul>${alertas.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><a href="#/admin/config">Ir a configuración</a></div>` : ''}
+    ${avisosGarantia.length ? `<div class="notice bad" role="alert">${avisosGarantia.map(esc).join('<br>')} <a href="#/tecnico/garantias">Ver garantías</a></div>` : ''}
     <div class="grid">${bloques.join('')}</div>
     ${asignaciones.length ? `<div class="card"><h3>Capacitación asignada</h3>${asignaciones.map((a) => {
       const l = lecs.find((x) => x.id === a.leccionId) || repo.d.lecciones.find((x) => x.id === a.leccionId);

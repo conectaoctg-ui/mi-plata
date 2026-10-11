@@ -29,6 +29,7 @@ function metricas(ctx, el) {
       <div class="card"><div class="muted">Personas activas</div><div class="kpi">${m.equipo.length}</div></div>
       <div class="card"><div class="muted">Conversión comercial</div><div class="kpi">${e.conversion == null ? '—' : pct(e.conversion)}</div><small>${e.total} clientes registrados</small></div>
       <div class="card"><div class="muted">Casos técnicos</div><div class="kpi">${m.tecnico.total}</div><small>${m.tecnico.entregados} entregados con control de calidad</small></div>
+      <div class="card"><div class="muted">Garantías respondidas a tiempo</div><div class="kpi">${m.garantias.resueltas ? pct(m.garantias.aTiempo / m.garantias.resueltas) : '—'}</div><small>${m.garantias.total} solicitudes · ${m.garantias.vencidasSinRespuesta} vencidas sin respuesta</small></div>
       <div class="card"><div class="muted">Conocimiento verificado</div><div class="kpi">${m.conocimiento.verificados}/${m.conocimiento.total}</div></div>
     </div>
     <div class="grid">
@@ -178,6 +179,13 @@ function config(ctx, el) {
     <form id="fC" novalidate>
       <div class="card"><h3>Política de garantías</h3>
         <label>Texto oficial de la política<textarea name="garantias" rows="5">${esc(c.garantias)}</textarea></label>
+        <div class="form-grid">
+          <label>Meses de garantía · nuevos<input name="garantiaMesesNuevo" type="number" min="1" max="365" value="${c.garantiaMesesNuevo ?? ''}"></label>
+          <label>Meses · usados<input name="garantiaMesesUsado" type="number" min="1" max="365" value="${c.garantiaMesesUsado ?? ''}"></label>
+          <label>Meses · reacondicionados<input name="garantiaMesesReacondicionado" type="number" min="0" max="365" value="${c.garantiaMesesReacondicionado ?? ''}"><span class="hint">Vacío = no definido (la app pedirá consultar).</span></label>
+          <label>Días para responder<input name="garantiaDiasRespuesta" type="number" min="1" max="365" value="${c.garantiaDiasRespuesta ?? ''}"></label>
+          <label>Días máximos con proveedor (nuevos)<input name="garantiaDiasProveedor" type="number" min="1" max="365" value="${c.garantiaDiasProveedor ?? ''}"></label>
+        </div>
         <div class="form-grid"><label>Fuente<input name="garantiasFuente" value="${esc(c.garantiasFuente)}"></label><label>Fecha<input type="date" name="garantiasFecha" value="${esc(c.garantiasFecha)}"></label><label>Responsable<input name="garantiasResponsable" value="${esc(c.garantiasResponsable)}"></label></div>
       </div>
       <div class="card"><h3>Financiación</h3>
@@ -212,6 +220,9 @@ function config(ctx, el) {
     const margen = d.margen.trim() ? parsePct(d.margen) : null;
     const cambios = { ...d, tasaUsuraEA: tasa ?? (d.tasaUsura.trim() ? NaN : null), margenMinimo: margen ?? (d.margen.trim() ? NaN : null) };
     delete cambios.tasaUsura; delete cambios.margen;
+    for (const k of ['garantiaMesesNuevo', 'garantiaMesesUsado', 'garantiaMesesReacondicionado', 'garantiaDiasRespuesta', 'garantiaDiasProveedor']) {
+      cambios[k] = d[k] === '' ? null : Number(d[k]);
+    }
     if (await intentar(() => repo.guardarConfig(user, cambios), $('#errC'))) ctx.toast('Configuración guardada');
   });
   el.querySelectorAll('[data-etapa]').forEach((f) => f.addEventListener('submit', async (ev) => {

@@ -9,6 +9,7 @@ import { validarLead, aplicarNoContactar, metricasEmbudo } from '../core/crm.js'
 import { validarCaso, agregarHallazgo, cambiarEstado, CONTROLES_CALIDAD, pareceDatoSensible } from '../core/service.js';
 import { calificarQuiz, registrarIntento, resumenProgreso, leccionesParaRol, estadoAsignacion, diasHastaCompletar } from '../core/academy.js';
 import { CATALOGO_DEMO } from './seed.js';
+import { evaluarGarantia, resolverGarantia, estadoPlazo, POLITICA_BASE } from '../core/garantia.js';
 import { migrar, SCHEMA_VERSION } from './store.js';
 
 const uid = () => (globalThis.crypto?.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2));
@@ -159,7 +160,12 @@ export class Repo {
       errores.push('El margen mínimo debe estar entre 0 % y 99 %.');
     }
     if ('ecreditUrl' in cambios && cambios.ecreditUrl && !/^https:\/\/[^\s]+$/.test(cambios.ecreditUrl)) errores.push('El enlace de E-Credit debe empezar por https://');
-    if (errores.length) throw new AppError('Revisa la configuración.', errores);
+    for (const k of ['garantiaMesesNuevo', 'garantiaMesesUsado', 'garantiaMesesReacondicionado', 'garantiaDiasRespuesta', 'garantiaDiasProveedor']) {
+      if (!(k in cambios) || cambios[k] === null) continue;
+      if (!Number.isInteger(cambios[k]) || cambios[k] < 0 || cambios[k] > 365) errores.push('Los plazos de garantía deben ser números enteros entre 0 y 365.');
+      if (['garantiaMesesNuevo', 'garantiaMesesUsado', 'garantiaDiasRespuesta', 'garantiaDiasProveedor'].includes(k) && cambios[k] === 0) errores.push('Los plazos de garantía de nuevos, usados y respuesta no pueden ser cero.');
+    }
+    if (errores.length) throw new AppError('Revisa la configuración.', [...new Set(errores)]);
     const permitidos = Object.keys(c);
     for (const [k, v] of Object.entries(cambios)) if (permitidos.includes(k)) c[k] = typeof v === 'string' ? v.trim().slice(0, 2000) : v;
     this.d.config = c;
@@ -334,12 +340,52 @@ export class Repo {
     assertCan(actor, 'tecnico.crearCaso');
     const v = validarCaso(input);
     if (!v.ok) throw new AppError('Revisa los datos del caso.', v.errors);
+    let garantia = null;
+    if (input.garantia) {
+      const g = input.garantia;
+      const ev = evaluarGarantia({ ...g, fechaSolicitud: this.hoyISO(), proveedorDirecto: g.proveedorDirecto === true }, this.politicaGarantia());
+      if (!ev.ok) throw new AppError('Revisa los datos de la garantía.', ev.errors);
+      garantia = {
+        condicion: g.condicion, fechaCompra: g.fechaCompra, proveedorDirecto: g.proveedorDirecto === true && g.condicion === 'nuevo',
+        causaInicial: g.causa || 'desconocida', vence: ev.vence, vigente: ev.vigente, solicitada: this.hoyISO(),
+        plazoDias: ev.plazoRespuestaDias ?? null, limiteRespuesta: ev.limiteRespuesta ?? null, resolucion: null
+      };
+    }
     const numero = (this.d.casos.reduce((m, c) => Math.max(m, c.numero || 0), 0) || 0) + 1;
-    const caso = { ...v.value, id: uid(), numero, estado: 'recibido', hallazgos: [], calidad: {}, clienteAprobo: false, historial: [], recibidoPor: actor.id, creado: this.ahoraISO() };
+    const caso = { ...v.value, tipo: garantia ? 'garantia' : 'servicio', garantia, id: uid(), numero, estado: 'recibido', hallazgos: [], calidad: {}, clienteAprobo: !!garantia, historial: [], recibidoPor: actor.id, creado: this.ahoraISO() };
     this.d.casos.push(caso);
-    this.auditar(actor, 'crear', 'caso', caso.id, { numero, modelo: caso.modelo });
+    this.auditar(actor, 'crear', 'caso', caso.id, { numero, modelo: caso.modelo, tipo: caso.tipo });
     this.guardar();
     return structuredClone(caso);
+  }
+
+  politicaGarantia() {
+    const c = this.d.config;
+    return Object.fromEntries(Object.keys(POLITICA_BASE).map((k) => [k, k in c ? c[k] : POLITICA_BASE[k]]));
+  }
+
+  /** Registra la respuesta a una garantía: reparación, cambio, devolución o no procede. */
+  resolverGarantiaCaso(actor, id, datos) {
+    actor = this.actor(actor);
+    assertCan(actor, 'tecnico.confirmarFalla');
+    const c = this._caso(id);
+    if (c.tipo !== 'garantia' || !c.garantia) throw new AppError('Este caso no es una garantía.');
+    if (c.garantia.resolucion) throw new AppError('Esta garantía ya tiene una respuesta registrada.');
+    if (datos.tipo !== 'rechazada' && !c.garantia.vigente) throw new AppError('La garantía está vencida: solo se puede registrar que no procede.');
+    if (datos.tipo !== 'rechazada' && !(c.hallazgos || []).some((h) => h.tipo === 'confirmada')) {
+      throw new AppError('Antes de responder la garantía, registra la falla confirmada con su evidencia.');
+    }
+    const r = resolverGarantia(datos);
+    if (!r.ok) throw new AppError('Revisa la respuesta de la garantía.', r.errors);
+    const hoy = this.hoyISO();
+    c.garantia.resolucion = {
+      tipo: r.tipo, excedente: r.excedente, devolver: r.devolver, valorPagado: datos.valorPagado ?? null, valorEquipoNuevo: datos.valorEquipoNuevo ?? null,
+      motivo: String(datos.motivo || '').trim().slice(0, 300), fecha: hoy, por: actor.id,
+      cumplioPlazo: estadoPlazo(c.garantia.limiteRespuesta, hoy, hoy) === 'cumplido'
+    };
+    this.auditar(actor, 'resolver_garantia', 'caso', id, { solucion: r.tipo, cumplioPlazo: c.garantia.resolucion.cumplioPlazo });
+    this.guardar();
+    return structuredClone(c.garantia.resolucion);
   }
 
   _caso(id) {
@@ -496,6 +542,17 @@ export class Repo {
         // Reparaciones repetidas: mismo modelo+número de caso anterior no se puede saber sin IMEI; se cuenta por reingresos marcados
         reingresos: casos.filter((c) => /garant|reingres/i.test(c.antecedentes || '')).length
       },
+      garantias: (() => {
+        const gs = casos.filter((c) => c.tipo === 'garantia');
+        const resueltas = gs.filter((c) => c.garantia.resolucion);
+        return {
+          total: gs.length,
+          resueltas: resueltas.length,
+          aTiempo: resueltas.filter((c) => c.garantia.resolucion.cumplioPlazo).length,
+          vencidasSinRespuesta: gs.filter((c) => !c.garantia.resolucion && estadoPlazo(c.garantia.limiteRespuesta, this.hoyISO()) === 'vencido').length,
+          porSolucion: resueltas.reduce((m, c) => ({ ...m, [c.garantia.resolucion.tipo]: (m[c.garantia.resolucion.tipo] || 0) + 1 }), {})
+        };
+      })(),
       catalogo: { equipos: this.d.catalogo.length, demo: this.d.catalogo.filter((e) => e.demo).length },
       conocimiento: { total: this.d.conocimiento.length, verificados: this.d.conocimiento.filter((k) => k.estado === 'verificado').length }
     };

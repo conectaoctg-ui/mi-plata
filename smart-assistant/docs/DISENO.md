@@ -31,6 +31,7 @@
 | RF-19 | Indicadores de capacitación, embudo, motivos de pérdida y casos técnicos | Admin | ✅ básicos |
 | RF-20 | Auditoría de acciones relevantes sin datos sensibles | Admin | ✅ |
 | RF-21 | Descargar y restaurar un respaldo | Admin | ✅ |
+| RF-25 | Garantías: vigencia por condición, plazo de respuesta, solución (reparación, cambio con excedente, devolución) e indicador de cumplimiento | Técnico | ✅ (ver `POLITICA_GARANTIA.md`) |
 | RF-22 | Asistente conversacional con IA que responda usando la base de conocimiento | IA | ❌ Fase siguiente |
 | RF-23 | Sincronizar entre dispositivos con un servidor | Plataforma | ❌ Fase siguiente |
 | RF-24 | Integración con E-Credit | Financiación | ❌ Solo si hay API oficial y autorización |
@@ -185,9 +186,9 @@ Reglas adicionales:
 
 | Tipo | Qué cubre | Herramienta | Resultado v0.1 |
 |---|---|---|---|
-| Unitarias de lógica | Formato y lectura de COP, conversión EA/MV, amortización (valor de referencia $ 94.560 para $ 1.000.000 al 2 % MV en 12 meses), cuadre exacto del capital, entradas inválidas, usura, márgenes, permisos, CRM, estados técnicos, búsqueda, academia, simulaciones, catálogo, hash y bloqueo, auditoría | `node --test` | **26/26 ✅** |
+| Unitarias de lógica | Formato y lectura de COP, conversión EA/MV, amortización (valor de referencia $ 94.560 para $ 1.000.000 al 2 % MV en 12 meses), cuadre exacto del capital, entradas inválidas, usura, márgenes, permisos, CRM, estados técnicos, búsqueda, academia, simulaciones, catálogo, hash y bloqueo, auditoría | `node --test` | **37/37 ✅** (incluye 11 de garantías) |
 | Capa de servicio | Accesos indebidos por rol, actor con rol falsificado en memoria, usuario desactivado, último admin, aislamiento de clientes por asesor, flujo técnico, respaldo, datos corruptos | `node --test` | **15/15 ✅** |
-| Punta a punta | Configuración inicial, clave débil, CRUD de admin, menús por rol, bloqueo de rutas por URL, simulador, consentimiento, no contactar, quiz, simulación no ética, buscador, flujo técnico completo, bloqueo por intentos, auditoría sin datos sensibles, sin errores de consola ni CSP, sin desplazamiento horizontal a 390 px | Playwright/Chromium | **36/36 ✅** |
+| Punta a punta | Configuración inicial, clave débil, CRUD de admin, menús por rol, bloqueo de rutas por URL, simulador, consentimiento, no contactar, quiz, simulación no ética, buscador, flujo técnico completo, bloqueo por intentos, auditoría sin datos sensibles, sin errores de consola ni CSP, sin desplazamiento horizontal a 390 px | Playwright/Chromium | **43/43 ✅** |
 | Estático | Variables no usadas o no definidas | ESLint | ✅ sin errores |
 
 **Criterios de aceptación del MVP (fase 2):**

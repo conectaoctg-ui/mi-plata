@@ -13,12 +13,14 @@ function vigBadge(e, hoy) {
 }
 
 /** Argumento comercial construido SOLO con datos registrados. */
-export function argumentoVeraz(e, cfg) {
+export function argumentoVeraz(e, cfg, politica = {}) {
   const partes = [`${e.modelo} de ${e.capacidadGB} GB, ${CONDICIONES[e.condicion].toLowerCase()}${e.color ? ', color ' + e.color.toLowerCase() : ''}.`];
   if (e.condicion !== 'nuevo') partes.push(e.saludBateria ? `Salud de batería registrada: ${e.saludBateria} % (muéstrala en Ajustes delante del cliente).` : 'Salud de batería: no registrada, revísala en Ajustes antes de ofrecerlo.');
   partes.push(`Precio de contado: ${cop(e.precio)}.`);
-  if (e.garantiaMeses) partes.push(`Garantía registrada: ${e.garantiaMeses} meses.`);
-  else partes.push(cfg.garantias ? 'Garantía: según la política registrada por la administración.' : 'Garantía: no registrada. Confírmala con la administración antes de ofrecerla.');
+  const mesesPolitica = { nuevo: politica.garantiaMesesNuevo, usado: politica.garantiaMesesUsado, reacondicionado: politica.garantiaMesesReacondicionado }[e.condicion];
+  if (e.garantiaMeses) partes.push(`Garantía registrada para este equipo: ${e.garantiaMeses} meses por defectos de fábrica.`);
+  else if (mesesPolitica) partes.push(`Garantía: ${mesesPolitica} meses por defectos de fábrica, según la política de la tienda. Se responde en máximo ${politica.garantiaDiasRespuesta} días.`);
+  else partes.push('Garantía: no definida para esta condición. Confírmala con la gerencia antes de ofrecerla.');
   if (e.notas) partes.push(e.notas);
   return partes.join(' ');
 }
@@ -44,7 +46,7 @@ function tarjeta(e, ctx, cmp) {
     <div class="row"><span class="tag">${esc(CONDICIONES[e.condicion])}</span>${e.color ? `<span class="tag">${esc(e.color)}</span>` : ''}${e.stock > 0 ? `<span class="tag ok">${e.stock} disponible(s)</span>` : '<span class="tag bad">Sin stock</span>'}${e.saludBateria ? `<span class="tag">Batería ${e.saludBateria} %</span>` : ''}</div>
     <div class="kpi">${cop(e.precio)}</div>
     ${procedencia(e)}
-    <details><summary>Argumento comercial veraz</summary><p>${esc(argumentoVeraz(e, cfg))}</p><small class="muted">Construido solo con los datos registrados. Si algo falta, se confirma antes de afirmarlo.</small></details>
+    <details><summary>Argumento comercial veraz</summary><p>${esc(argumentoVeraz(e, cfg, ctx.repo.politicaGarantia()))}</p><small class="muted">Construido solo con los datos registrados. Si algo falta, se confirma antes de afirmarlo.</small></details>
     <label class="inline"><input type="checkbox" data-cmp="${esc(e.id)}" ${cmp.includes(e.id) ? 'checked' : ''}> Comparar</label>
   </div>`;
 }

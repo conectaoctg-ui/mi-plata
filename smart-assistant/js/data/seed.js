@@ -6,6 +6,19 @@
 
 const REF = { estado: 'pendiente', fuente: 'Referencia general redactada para el MVP; validar con la administración', actualizado: '2026-10-11', responsable: 'Sin asignar' };
 
+// Política de garantía informada por la gerencia de ConectaOCTG (2026-10-11).
+export const FUENTE_GERENCIA = { estado: 'verificado', fuente: 'Política informada por la gerencia de ConectaOCTG', actualizado: '2026-10-11', responsable: 'Gerencia ConectaOCTG' };
+
+export const POLITICA_GARANTIA = [
+  'Equipos nuevos: 1 año (12 meses) de garantía desde la fecha de compra.',
+  'Equipos usados: 6 meses de garantía desde la fecha de compra.',
+  'Cubre fallas o defectos de fábrica verificables por nuestro servicio técnico.',
+  'Respondemos la garantía en máximo 3 días.',
+  'Si la falla es reparable, nuestro servicio técnico la repara.',
+  'Si la falla no es reparable, el cliente puede elegir: (a) cambiar el celular por uno de igual valor, o por uno de mayor valor pagando el excedente; o (b) la devolución de su dinero.',
+  'Excepción: si el equipo es nuevo y tiene garantía directa con un proveedor, el proceso puede tardar hasta dos meses.'
+].join('\n');
+
 export const CONOCIMIENTO = [
   { id: 'kb-imei', area: 'ventas', titulo: 'Cómo ver modelo, capacidad e IMEI', texto: 'Ajustes > General > Información muestra modelo, capacidad, número de serie e IMEI. Marcando *#06# también aparece el IMEI. Debe coincidir con el de la caja y la factura.', ...REF },
   { id: 'kb-bateria', area: 'tecnico', titulo: 'Salud de la batería', texto: 'Ajustes > Batería > Estado de la batería (el nombre exacto varía según la versión de iOS). Apple considera desgastada una batería por debajo de aproximadamente 80 % de capacidad máxima; iOS puede mostrar el aviso "Servicio".', ...REF },
@@ -13,7 +26,9 @@ export const CONOCIMIENTO = [
   { id: 'kb-icloud', area: 'ventas', titulo: 'Bloqueo de activación (iCloud)', texto: 'Un equipo con Buscar activo y cuenta ajena queda bloqueado al restaurarlo. Al recibir un usado para venta, el dueño debe cerrar sesión de iCloud delante del asesor y luego borrar el equipo. Nunca comprar equipos con bloqueo ni ofrecer "desbloqueos".', ...REF },
   { id: 'kb-imei-col', area: 'ventas', titulo: 'Verificar IMEI reportado en Colombia', texto: 'Existe consulta pública en imeicolombia.com.co. La administración debe confirmar el procedimiento interno que se usa en la tienda y registrar aquí el paso a paso.', ...REF },
   { id: 'kb-esim', area: 'ventas', titulo: 'eSIM y bandeja SIM', texto: 'Algunos iPhone (por ejemplo, modelos vendidos en EE. UU. desde el iPhone 14) no tienen bandeja para SIM física. Confirmarlo antes de vender a un cliente que usa SIM física.', ...REF },
-  { id: 'kb-garantia', area: 'general', titulo: 'Garantía legal en Colombia', texto: 'El Estatuto del Consumidor (Ley 1480 de 2011) establece la garantía legal, que es obligatoria. Los tiempos y condiciones que ofrece ConectaOCTG para equipos nuevos, reacondicionados, usados y reparaciones DEBEN ser registrados por la administración. Mientras no estén registrados, no se deben prometer tiempos al cliente.', ...REF },
+  { id: 'kb-garantia', v: 2, area: 'general', titulo: 'Política de garantía de ConectaOCTG', texto: 'Nuevos: 12 meses. Usados: 6 meses. Cubre fallas o defectos de fábrica verificables. Respuesta en máximo 3 días. Si es reparable, se repara. Si no es reparable, el cliente elige: cambio por un equipo de igual valor (o de mayor valor pagando el excedente) o devolución del dinero. Equipos nuevos con garantía directa de proveedor: hasta dos meses. Reacondicionados y reparaciones: la gerencia aún no ha definido la garantía; consultar antes de prometer.', ...FUENTE_GERENCIA },
+  { id: 'kb-garantia-que-no', v: 1, area: 'general', titulo: 'Qué NO cubre la garantía', texto: 'La garantía cubre defectos de fábrica. No cubre: golpes, caídas o presión; contacto con líquidos; equipos abiertos o reparados por terceros; modificaciones de software no autorizadas. Cualquier rechazo debe estar sustentado por el técnico (qué prueba hizo) y explicado al cliente por escrito. La lista de exclusiones es una propuesta derivada de "defectos de fábrica verificables": la gerencia debe confirmarla.', ...REF },
+  { id: 'kb-garantia-ley', v: 1, area: 'general', titulo: 'Garantía legal en Colombia (marco general)', texto: 'El Estatuto del Consumidor (Ley 1480 de 2011) establece la garantía legal, que es obligatoria y no se puede negar ni condicionar. Su reglamentación (Decreto 735 de 2013, compilado en el Decreto 1074 de 2015) fija plazos máximos para responder y reparar. Ante dudas sobre un caso puntual, consultar a la gerencia; la autoridad en la materia es la Superintendencia de Industria y Comercio (SIC).', ...REF },
   { id: 'kb-datos', area: 'general', titulo: 'Datos personales de clientes', texto: 'La Ley 1581 de 2012 regula el tratamiento de datos personales en Colombia. Pedir solo los datos necesarios, informar para qué se usan, obtener autorización y respetar cuando el cliente pide no ser contactado. Nunca pedir contraseñas, códigos de verificación ni la clave de Apple ID.', ...REF },
   { id: 'kb-humedad', area: 'tecnico', titulo: 'Indicador de humedad', texto: 'En la mayoría de iPhone el indicador de contacto con líquido está en la ranura de la bandeja SIM. Se ve rojo o rosado si tuvo contacto con líquido. Registrar su estado en la recepción.', ...REF },
   { id: 'kb-emparejamiento', area: 'tecnico', titulo: 'Emparejamiento de piezas', texto: 'En iPhone recientes la pantalla, batería, cámaras y el módulo de Face ID están asociados a la placa. Reemplazos sin calibración pueden generar avisos de "Pieza desconocida" o perder funciones (por ejemplo True Tone). El módulo de Face ID no se puede trasladar de un equipo a otro sin perder la función.', ...REF },
@@ -104,11 +119,11 @@ const q = (p, o, r, explica) => ({ p, o, r, explica });
 
 export const LECCIONES = [
   {
-    id: 'gen-1', area: 'general', nivel: 1, minutos: 5, titulo: 'Bienvenida y reglas de la casa',
+    id: 'gen-1', v: 2, area: 'general', nivel: 1, minutos: 5, titulo: 'Bienvenida y reglas de la casa',
     bloques: ['ConectaOCTG se especializa solo en iPhone: venta y servicio técnico.', 'Ningún equipo de cliente pasa al taller sin orden de servicio.', 'Nunca revisar fotos, mensajes ni apps personales del cliente.', 'Nunca pedir contraseñas, códigos de verificación ni la clave del Apple ID.', 'Ante dudas de precio, garantía, financiación o diagnóstico: preguntar antes de prometer.'],
     quiz: [
       q('Un cliente pide reparar un Android. ¿Qué hacemos?', ['Lo recibimos igual', 'Explicamos con amabilidad que somos especialistas solo en iPhone', 'Lo mandamos a otro taller sin decirle'], 1, 'La especialización es parte de nuestra promesa al cliente.'),
-      q('¿Qué hacemos si no conocemos la garantía de un equipo?', ['Decir "un año"', 'Preguntar a la administración antes de prometer', 'No mencionarla'], 1, 'Nunca se inventan políticas: se confirman.'),
+      q('Un cliente pregunta por la garantía de un reacondicionado, que la política aún no define. ¿Qué hacemos?', ['Decir "6 meses, como los usados"', 'Consultar a la gerencia antes de prometer', 'No mencionarla'], 1, 'Lo que la política no define se confirma; nunca se inventa.'),
       q('¿Podemos pedir el código de verificación que le llega al cliente?', ['Sí, para agilizar', 'No, nunca', 'Solo si el cliente quiere'], 1, 'Los códigos y contraseñas son personales. Pedirlos expone al cliente a fraudes.')
     ]
   },
@@ -122,11 +137,12 @@ export const LECCIONES = [
     ]
   },
   {
-    id: 'ven-2', area: 'ventas', nivel: 2, minutos: 10, roles: ['vendedor'], titulo: 'Nuevo, reacondicionado y usado',
-    bloques: ['Nuevo: sellado, sin uso previo.', 'Reacondicionado: revisado y restaurado; puede tener piezas reemplazadas. Explicar cuáles según el historial.', 'Usado: vendido en el estado en que está; informar estado físico, batería y piezas.', 'La garantía de cada condición la define la administración. Si no está registrada, se confirma antes de ofrecer.'],
+    id: 'ven-2', v: 2, area: 'ventas', nivel: 2, minutos: 10, roles: ['vendedor'], titulo: 'Nuevo, reacondicionado y usado',
+    bloques: ['Nuevo: sellado, sin uso previo.', 'Reacondicionado: revisado y restaurado; puede tener piezas reemplazadas. Explicar cuáles según el historial.', 'Usado: vendido en el estado en que está; informar estado físico, batería y piezas.', 'Garantía: nuevos 12 meses, usados 6 meses, por defectos de fábrica. Reacondicionados: aún no definida por la gerencia; se confirma antes de ofrecer.'],
     quiz: [
       q('¿Qué se informa de un reacondicionado?', ['Que es nuevo', 'Qué piezas se cambiaron y su garantía registrada', 'Nada'], 1, 'Decir que un reacondicionado es nuevo es engañoso.'),
-      q('La garantía de un usado no está registrada en la app. ¿Qué hacemos?', ['Prometer 6 meses', 'Confirmar con la administración antes de ofrecer', 'Decir que no tiene'], 1, 'Información desconocida se confirma; nunca se inventa.')
+      q('¿Cuánta garantía tiene un iPhone usado vendido por ConectaOCTG?', ['1 mes', '6 meses', '1 año'], 1, 'Política de la gerencia: usados 6 meses, nuevos 12 meses.'),
+      q('¿Y un reacondicionado?', ['6 meses', '12 meses', 'No está definida: se consulta a la gerencia'], 2, 'Información que no está definida se confirma; nunca se inventa.')
     ]
   },
   {
@@ -161,6 +177,26 @@ export const LECCIONES = [
       q('El cliente pregunta "¿me lo aprueban seguro?"', ['"Sí, seguro"', '"La decisión es de la entidad; podemos hacer la consulta con tu autorización"', '"Si pagas más inicial, sí"'], 1, 'El asesor no decide ni garantiza aprobaciones.'),
       q('¿Qué valor de cuota se le comunica al cliente como oferta?', ['El de la simulación educativa de esta app', 'El que entrega la plataforma oficial', 'El saldo dividido entre meses'], 1, 'Solo la información oficial es una oferta.'),
       q('¿Antes de consultar el cupo se necesita…?', ['Nada', 'La autorización del cliente', 'Su contraseña de correo'], 1, 'La información financiera requiere autorización del titular.')
+    ]
+  },
+  {
+    id: 'gar-1', v: 1, area: 'general', nivel: 1, minutos: 10, titulo: 'Garantías: política y atención de reclamos',
+    bloques: [
+      'Nuevos: 12 meses. Usados: 6 meses. Se cuentan desde la fecha de compra que aparece en la factura.',
+      'Cubre fallas o defectos de fábrica que el servicio técnico pueda verificar. Golpes, líquidos, manipulación por terceros o software modificado no son defectos de fábrica.',
+      'Tenemos máximo 3 días para responder. Registra la solicitud en Servicio técnico › Garantías: la app calcula la fecha límite.',
+      'Si la falla es reparable: se repara sin costo.',
+      'Si no es reparable, el cliente elige: cambio por un equipo de igual valor (o de mayor valor pagando solo el excedente) o devolución de su dinero.',
+      'Equipos nuevos con garantía directa de proveedor: el proceso puede tardar hasta dos meses. Infórmalo por escrito.',
+      'Si no procede, explica el motivo con la prueba que hizo el técnico. Nunca rechaces una garantía "a ojo".',
+      'Entrega siempre constancia escrita de recibido con la fecha.'
+    ],
+    quiz: [
+      q('Un cliente compró un iPhone usado hace 5 meses y tiene una falla de fábrica. ¿Procede la garantía?', ['No, los usados no tienen garantía', 'Sí, está dentro de los 6 meses', 'Solo si paga la revisión'], 1, 'Usados: 6 meses desde la compra.'),
+      q('¿Cuál es el plazo máximo para responder una garantía (sin proveedor)?', ['3 días', '15 días', '2 meses'], 0, 'La política de ConectaOCTG es responder en máximo 3 días.'),
+      q('La falla no es reparable. El equipo costó $ 2.000.000 y el cliente quiere uno de $ 2.300.000. ¿Cuánto paga?', ['$ 2.300.000', '$ 300.000', 'Nada'], 1, 'En el cambio, el cliente paga solo el excedente.'),
+      q('El equipo llegó con golpe y la pantalla rota. ¿Qué hacemos?', ['Lo cubrimos por garantía', 'El técnico documenta que no es defecto de fábrica y se ofrece reparación con costo', 'Le decimos que no y ya'], 1, 'El rechazo se sustenta con la revisión técnica y se explica.'),
+      q('Falla no reparable. ¿Quién elige entre cambio y devolución?', ['La tienda', 'El cliente', 'El técnico'], 1, 'La política ofrece las dos opciones al cliente.')
     ]
   },
   {
@@ -229,6 +265,26 @@ export const ESCENARIOS = [
       c: { cliente: 'Me pide un código que me llegó al celular, ¿te lo dicto?', opciones: [
         { texto: 'No, ese código es personal. Escríbelo tú directamente donde lo pide la plataforma.', puntos: 2, feedback: 'Excelente protección de datos del cliente.' },
         { texto: 'Sí, dímelo y yo lo pongo.', puntos: -1, feedback: 'Nunca se manejan códigos ni contraseñas del cliente.' }
+      ] }
+    }
+  },
+  {
+    id: 'esc-garantia', v: 1, area: 'general', titulo: 'Reclamo de garantía', cliente: 'Mateo (ficticio), compró un usado hace 4 meses',
+    inicio: 'a',
+    nodos: {
+      a: { cliente: 'Este celular que me vendieron ya no carga. ¡Es el colmo!', opciones: [
+        { texto: 'Entiendo tu molestia, Mateo. Lo revisamos ya. ¿Tienes la factura para ver la fecha de compra?', puntos: 2, feedback: 'Excelente: empatía y pides el dato que define la garantía.', siguiente: 'b' },
+        { texto: 'Eso seguro fue que usted lo mojó.', puntos: -1, feedback: 'Acusar sin revisar es irrespetuoso y no está sustentado.', siguiente: 'b' },
+        { texto: 'Los usados no tienen garantía.', puntos: -1, feedback: 'Falso: los usados tienen 6 meses de garantía.', siguiente: 'b' }
+      ] },
+      b: { cliente: 'Aquí está, lo compré hace 4 meses. ¿Cuánto se demoran?', opciones: [
+        { texto: 'Estás dentro de los 6 meses. Te dejo constancia de recibido y te respondemos en máximo 3 días.', puntos: 2, feedback: 'Correcto: confirmas el término y el plazo por escrito.', siguiente: 'c' },
+        { texto: 'Uy, eso se demora como un mes.', puntos: 0, feedback: 'El plazo de la política es máximo 3 días (salvo nuevos con proveedor).', siguiente: 'c' }
+      ] },
+      c: { cliente: 'El técnico dice que no se puede reparar. ¿Y ahora?', opciones: [
+        { texto: 'Puedes elegir: cambio por uno de igual valor, uno de mayor valor pagando solo la diferencia, o la devolución de tu dinero.', puntos: 2, feedback: 'Excelente: presentas todas las opciones y el cliente elige.' },
+        { texto: 'Te damos otro, pero tiene que ser más caro.', puntos: -1, feedback: 'La política incluye igual valor y devolución; ocultarlo es engañoso.' },
+        { texto: 'Te devolvemos la mitad.', puntos: -1, feedback: 'Eso no está en la política.' }
       ] }
     }
   },

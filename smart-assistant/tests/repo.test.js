@@ -155,7 +155,7 @@ test('academia: quiz, asignación, competencia y métricas', async () => {
   const fila = m.equipo.find((x) => x.id === vend.id);
   assert.equal(fila.aprobadas, 1);
   assert.equal(fila.faltasEticas, 1);
-  assert.equal(m.conocimiento.verificados, 0);
+  assert.equal(m.conocimiento.verificados, 1); // la política de garantía de la gerencia
   assert.ok(m.equipo.find((x) => x.id === tec.id));
 });
 
