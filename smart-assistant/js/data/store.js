@@ -68,7 +68,7 @@ export class LocalStore {
     try {
       this.storage.setItem(this.key, JSON.stringify(this.data));
       return true;
-    } catch (e) {
+    } catch {
       throw new Error('No se pudo guardar en este dispositivo (¿almacenamiento lleno o bloqueado?).');
     }
   }

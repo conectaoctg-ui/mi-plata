@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConectaOCTG Smart Assistant</title>
+  <meta name="description" content="Capacitación y asistencia para venta y servicio técnico de iPhone en ConectaOCTG.">
+  <meta name="theme-color" content="#1d1d1f">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <a class="skip" href="#view">Saltar al contenido</a>
+  <div id="auth" class="auth hidden"></div>
+
+  <div id="shell" class="hidden">
+    <header class="topbar">
+      <button id="menuBtn" class="icon-btn only-mobile" aria-label="Abrir menú">☰</button>
+      <div class="brand"><span class="logo sm" aria-hidden="true"></span><span>ConectaOCTG <small>Smart Assistant</small></span></div>
+      <div class="top-actions">
+        <a href="#/buscar" class="icon-btn" aria-label="Buscar">🔎</a>
+        <span id="userChip" class="chip"></span>
+        <button id="logoutBtn" class="btn small">Salir</button>
+      </div>
+    </header>
+    <div class="layout">
+      <nav id="nav" class="sidenav" aria-label="Menú principal"></nav>
+      <main id="view" class="view" tabindex="-1"></main>
+    </div>
+    <div id="backdrop" class="backdrop hidden"></div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="dialog"><form method="dialog"><p id="dialogMsg"></p><div class="row end"><button value="no" class="btn">Cancelar</button><button value="si" class="btn primary" id="dialogOk">Confirmar</button></div></form></dialog>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
